@@ -1,6 +1,4 @@
-#include "Python.h"
 #include "pyvpi.h"
-#include "vpi_user.h"
 
 /*****************************************************************************
  * This is all code for python.
@@ -43,7 +41,7 @@ static int pyvpi_CheckError( void )
          return NULL;
      }
      ans = vpi_handle_by_name(name,scope);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("i", ans);
  }
@@ -62,22 +60,15 @@ static int pyvpi_CheckError( void )
          return NULL;
      }
      ans = vpi_handle_by_index(object,indx);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("i", ans);
  }
 
 /* for traversing relationships */
 /*
-XXTERN vpiHandle  vpi_handle          PROTO_PARAMS((PLI_INT32 type,
-                                                    vpiHandle refHandle));
-XXTERN vpiHandle  vpi_handle_multi    PROTO_PARAMS((PLI_INT32 type,
-                                                    vpiHandle refHandle1,
-                                                    vpiHandle refHandle2,
-                                                    ... ));
-XXTERN vpiHandle  vpi_iterate         PROTO_PARAMS((PLI_INT32 type,
-                                                    vpiHandle refHandle));
-XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
+    XXTERN vpiHandle  vpi_handle          PROTO_PARAMS((PLI_INT32 type,
+                                                        vpiHandle refHandle));
 */
  static PyObject* pyvpi_Handle(PyObject *self, PyObject *args)
  {
@@ -90,11 +81,21 @@ XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
          return NULL;
      }
      ans = vpi_handle_by_index(type,refHandle);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("i", ans);
  }
-
+/*
+    XXTERN vpiHandle  vpi_handle_multi    PROTO_PARAMS((PLI_INT32 type,
+                                                        vpiHandle refHandle1,
+                                                        vpiHandle refHandle2,
+                                                        ... ));
+*/
+//Can port this function now, this will be changed in future.
+/*
+    XXTERN vpiHandle  vpi_iterate         PROTO_PARAMS((PLI_INT32 type,
+                                                        vpiHandle refHandle));
+*/
  static PyObject* pyvpi_Iterate(PyObject *self, PyObject *args)
  {
      PLI_INT32 type;
@@ -106,11 +107,13 @@ XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
          return NULL;
      }
      ans = vpi_iterate(type,refHandle);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("i", ans);
  }
-
+/* 
+    XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
+*/
  static PyObject* pyvpi_Scan(PyObject *self, PyObject *args)
  {
      vpiHandle iterator;
@@ -121,20 +124,20 @@ XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
          return NULL;
      }
      ans = vpi_scan(iterator);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("i", ans);
  }
 
  /* for processing properties */
  /*
-XXTERN PLI_INT32  vpi_get             PROTO_PARAMS((PLI_INT32 property,
-                                                    vpiHandle object));
-
-XXTERN PLI_INT64  vpi_get64 	      PROTO_PARAMS((PLI_INT32 property,
-                                                    vpiHandle object));
-XXTERN PLI_BYTE8 *vpi_get_str         PROTO_PARAMS((PLI_INT32 property,
-                                                    vpiHandle object));
+    XXTERN PLI_INT32  vpi_get             PROTO_PARAMS((PLI_INT32 property,
+                                                        vpiHandle object));
+    
+    XXTERN PLI_INT64  vpi_get64           PROTO_PARAMS((PLI_INT32 property,
+                                                        vpiHandle object));
+    XXTERN PLI_BYTE8 *vpi_get_str         PROTO_PARAMS((PLI_INT32 property,
+                                                        vpiHandle object));
  */
  static PyObject* pyvpi_Get(PyObject *self, PyObject *args)
  {
@@ -147,7 +150,7 @@ XXTERN PLI_BYTE8 *vpi_get_str         PROTO_PARAMS((PLI_INT32 property,
          return NULL;
      }
      ans = vpi_get(property,object);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("i", ans);
  }
@@ -163,7 +166,7 @@ XXTERN PLI_BYTE8 *vpi_get_str         PROTO_PARAMS((PLI_INT32 property,
          return NULL;
      }
      ans = vpi_get(property,object);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("i", ans);
  }
@@ -179,14 +182,24 @@ XXTERN PLI_BYTE8 *vpi_get_str         PROTO_PARAMS((PLI_INT32 property,
          return NULL;
      }
      ans = vpi_get_str(property,object);
-     if(pyvpi_CheckError)
+     if(pyvpi_CheckError())
         return NULL;
      return Py_BuildValue("s", ans);
  }
 
  static PyMethodDef pyvpi_Methods[] = {
-    {"HandleByName",  pyvpi_HandleByName, METH_VARARGS,"vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, *vpiHandle scope)."},
-	{"HandleByName",  pyvpi_HandleByIndex, METH_VARARGS,"vpiHandle  pyvpi_HandleByIndex (vpiHandle object, PLI_INT32 indx)."},
+    /* for obtaining handles */
+    {"HandleByName",    pyvpi_HandleByName,     METH_VARARGS,   "vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, *vpiHandle scope)."},
+    {"HandleByName",    pyvpi_HandleByIndex,    METH_VARARGS,   "vpiHandle  pyvpi_HandleByIndex (vpiHandle object, PLI_INT32 indx)."},
+    /* for traversing relationships */
+    {"Handle",          pyvpi_Handle,           METH_VARARGS,   "vpiHandle  vpi_handle   (PLI_INT32 type, vpiHandle refHandle)"},
+    //{"HandleMulti",     pyvpi_HandleMulti,      METH_VARARGS,   "vpiHandle  vpi_handle_multi    (PLI_INT32 type, vpiHandle refHandle1, vpiHandle refHandle2, ... )"},
+    {"Iterate",         pyvpi_Iterate,          METH_VARARGS,   "vpiHandle  vpi_iterate (PLI_INT32 type, vpiHandle refHandle)"},
+    {"Scan",            pyvpi_Scan,             METH_VARARGS,   "vpiHandle  vpi_scan    (vpiHandle iterator)"},
+    /* for processing properties */
+    {"Get",             pyvpi_Get,              METH_VARARGS,"PLI_INT32  vpi_get             (PLI_INT32 property, vpiHandle object)."},
+    {"Get64",           pyvpi_Get64,            METH_VARARGS,"PLI_INT64  vpi_get64          (PLI_INT32 property, vpiHandle object)."},
+    {"GetStr",          pyvpi_GetStr,           METH_VARARGS,"PLI_BYTE8 *vpi_get_str         (PLI_INT32 property, vpiHandle object)."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -238,11 +251,18 @@ void pyvpi_RegisterCallbacks (void)
 }
 
 //============================================================================
+PLI_INT32 pyvpi_printf()
+{
+    vpi_printf("...123...\n");
+    return 1;
+}
 PLI_INT32 pyvpi_test( PLI_BYTE8 *user_data )
 {
-    //FILE * fp = fopen("./Release/test.py","r");
-    //PyRun_SimpleFile(fp,"test.py");
-    //fclose(fp);
+    FILE * fp = fopen("./test.py","r");
+    PyRun_SimpleFile(fp,"test.py");
+    //PyRun_SimpleString("print 'Hello python.'");
+    vpi_printf("vpi info from inner.");
+    fclose(fp);
     return 0;
 }
 
