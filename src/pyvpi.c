@@ -5,7 +5,8 @@
 /*****************************************************************************/
 //We Define two errors, if vpi call function is error, VpiError will be assert,
 //else if python error, PyError will be set.
-static PyObject *VpiError,*PyError;
+static PyObject *VpiError;
+static PyObject *PyError;
 
 /*****************************************************************************
  * pyvpi_CheckError()
@@ -35,7 +36,7 @@ static int pyvpi_CheckError( void )
      PLI_BYTE8 *name;
      vpiHandle scope;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "si", &name,&scope))
+     if (!PyArg_ParseTuple(args, "sl", &name,&scope))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (str,int).");
          return NULL;
@@ -43,7 +44,7 @@ static int pyvpi_CheckError( void )
      ans = vpi_handle_by_name(name,scope);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("i", ans);
+     return Py_BuildValue("l", ans);
  }
 /* 
  * XXTERN vpiHandle  vpi_handle_by_index PROTO_PARAMS((vpiHandle object,
@@ -54,7 +55,7 @@ static int pyvpi_CheckError( void )
      vpiHandle object;
      PLI_INT32 indx;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "ii", &object,&indx))
+     if (!PyArg_ParseTuple(args, "li", &object,&indx))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
          return NULL;
@@ -62,7 +63,7 @@ static int pyvpi_CheckError( void )
      ans = vpi_handle_by_index(object,indx);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("i", ans);
+     return Py_BuildValue("l", ans);
  }
 
 /* for traversing relationships */
@@ -75,7 +76,7 @@ static int pyvpi_CheckError( void )
      vpiHandle type;
      PLI_INT32 refHandle;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "ii", &type,&refHandle))
+     if (!PyArg_ParseTuple(args, "il", &type,&refHandle))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
          return NULL;
@@ -83,7 +84,7 @@ static int pyvpi_CheckError( void )
      ans = vpi_handle_by_index(type,refHandle);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("i", ans);
+     return Py_BuildValue("l", ans);
  }
 /*
     XXTERN vpiHandle  vpi_handle_multi    PROTO_PARAMS((PLI_INT32 type,
@@ -101,7 +102,7 @@ static int pyvpi_CheckError( void )
      PLI_INT32 type;
      vpiHandle refHandle;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "ii", &type,&refHandle))
+     if (!PyArg_ParseTuple(args, "il", &type,&refHandle))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
          return NULL;
@@ -109,7 +110,7 @@ static int pyvpi_CheckError( void )
      ans = vpi_iterate(type,refHandle);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("i", ans);
+     return Py_BuildValue("l", ans);
  }
 /* 
     XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
@@ -118,7 +119,7 @@ static int pyvpi_CheckError( void )
  {
      vpiHandle iterator;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "i", &iterator))
+     if (!PyArg_ParseTuple(args, "l", &iterator))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int).");
          return NULL;
@@ -126,7 +127,7 @@ static int pyvpi_CheckError( void )
      ans = vpi_scan(iterator);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("i", ans);
+     return Py_BuildValue("l", ans);
  }
 
  /* for processing properties */
@@ -144,7 +145,7 @@ static int pyvpi_CheckError( void )
      PLI_INT32 property;
      vpiHandle object;
      PLI_INT32 ans;
-     if (!PyArg_ParseTuple(args, "ii", &property,&object))
+     if (!PyArg_ParseTuple(args, "il", &property,&object))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
          return NULL;
@@ -160,7 +161,7 @@ static int pyvpi_CheckError( void )
      PLI_INT32 property;
      vpiHandle object;
      PLI_INT64 ans;
-     if (!PyArg_ParseTuple(args, "ii", &property,&object))
+     if (!PyArg_ParseTuple(args, "il", &property,&object))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
          return NULL;
@@ -176,7 +177,7 @@ static int pyvpi_CheckError( void )
      PLI_INT32 property;
      vpiHandle object;
      char  *ans;
-     if (!PyArg_ParseTuple(args, "ii", &property,&object))
+     if (!PyArg_ParseTuple(args, "il", &property,&object))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
          return NULL;
@@ -189,8 +190,8 @@ static int pyvpi_CheckError( void )
 
  static PyMethodDef pyvpi_Methods[] = {
     /* for obtaining handles */
-    {"HandleByName",    pyvpi_HandleByName,     METH_VARARGS,   "vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, *vpiHandle scope)."},
-    {"HandleByName",    pyvpi_HandleByIndex,    METH_VARARGS,   "vpiHandle  pyvpi_HandleByIndex (vpiHandle object, PLI_INT32 indx)."},
+    {"HandleByName",    pyvpi_HandleByName,     METH_VARARGS,   "vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, vpiHandle scope)."},
+    {"HandleByIndex",   pyvpi_HandleByIndex,    METH_VARARGS,   "vpiHandle  pyvpi_HandleByIndex (vpiHandle object, PLI_INT32 indx)."},
     /* for traversing relationships */
     {"Handle",          pyvpi_Handle,           METH_VARARGS,   "vpiHandle  vpi_handle   (PLI_INT32 type, vpiHandle refHandle)"},
     //{"HandleMulti",     pyvpi_HandleMulti,      METH_VARARGS,   "vpiHandle  vpi_handle_multi    (PLI_INT32 type, vpiHandle refHandle1, vpiHandle refHandle2, ... )"},
@@ -208,20 +209,26 @@ static int pyvpi_CheckError( void )
 PyMODINIT_FUNC initpyvpi(void)
 {
     PyObject *m;
-
+    //Check user type is ready..
+    if (PyType_Ready(&pyvpi_value_Type) < 0)
+        return;
+        
     m = Py_InitModule("pyvpi", pyvpi_Methods);
     if (m == NULL)
         return;
-
+    
     //Add vpi Error in pyvpi module.
-    VpiError = PyErr_NewException("vpiError", NULL, NULL);
+    VpiError = PyErr_NewException("pyvpi.vpiError", NULL, NULL);
     Py_INCREF(VpiError);
     PyModule_AddObject(m, "vpiError", VpiError);
-
+    //return;
     //Add python Error in pyvpi module.
-    PyError = PyErr_NewException("PyError", NULL, NULL);
+    PyError = PyErr_NewException("pyvpi.PyError", NULL, NULL);
     Py_INCREF(PyError);
-    PyModule_AddObject(m, "PyError", PyError);
+    PyModule_AddObject(m, "PyError", PyError);    
+    //Add user type.
+    Py_INCREF(&pyvpi_value_Type);
+    PyModule_AddObject(m, "Value", (PyObject *)&pyvpi_value_Type);
 }
 
 //============================================================================
