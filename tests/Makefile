@@ -1,10 +1,9 @@
 export PYTHONPATH = .:../src
 
-MTI_HOME = /home/g174911/modelsim/modeltech
 
 INC_PATH      = -I$(MTI_HOME)/include
-INC_PATH     += -I/home/g174911/tools/include/python2.7
-LIB_PATH      = -L/home/g174911/tools/lib -L$(MTI_HOME)/linux_x86_64
+INC_PATH     += -I$(PY_HOME)/include/python2.7
+LIB_PATH      = -L$(PY_HOME)/lib -L$(MTI_HOME)/linux_x86_64
 LIB_REF       = -lpython2.7 -lvsim -lm -ldl -lutil
 CFLAGS        = -c -g $(INC_PATH) -fPIC
 SRC_C         = ../src/pyvpi.c ../src/pyvalue.c ../src/pycbdata.c
