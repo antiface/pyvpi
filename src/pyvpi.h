@@ -4,6 +4,7 @@
 #include "sv_vpi_user.h"
 
 #include "pyvalue.h"
+#include "pycbdata.h"
 /* ------------------------------------------------------------------------- */
 //PyObject vpi time struct data.
 typedef struct t_pyvpi_time

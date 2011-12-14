@@ -130,8 +130,8 @@ static int pyvpi_CheckError( void )
      return Py_BuildValue("l", ans);
  }
 
- /* for processing properties */
- /*
+/* for processing properties */
+/*
     XXTERN PLI_INT32  vpi_get             PROTO_PARAMS((PLI_INT32 property,
                                                         vpiHandle object));
     
@@ -139,7 +139,7 @@ static int pyvpi_CheckError( void )
                                                         vpiHandle object));
     XXTERN PLI_BYTE8 *vpi_get_str         PROTO_PARAMS((PLI_INT32 property,
                                                         vpiHandle object));
- */
+*/
  static PyObject* pyvpi_Get(PyObject *self, PyObject *args)
  {
      PLI_INT32 property;
@@ -187,7 +187,65 @@ static int pyvpi_CheckError( void )
         return NULL;
      return Py_BuildValue("s", ans);
  }
-
+/*
+    vpiHandle  vpi_register_cb     (p_cb_data cb_data_p);
+    PLI_INT32  vpi_remove_cb       (vpiHandle cb_obj);
+    void       vpi_get_cb_info     (vpiHandle object, p_cb_data cb_data_p);
+    vpiHandle  vpi_register_systf  (p_vpi_systf_data   systf_data_p);
+    void       vpi_get_systf_info  (vpiHandle object, p_vpi_systf_data   systf_data_p);
+ */
+  static PyObject* pyvpi_RegisterCb(PyObject *self, PyObject *args)
+ {
+     s_pyvpi_cbdata*  cbdata;
+     vpiHandle  ans;     
+     if (!PyArg_ParseTuple(args, "O", &cbdata))
+     {
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (pyvpi.CbData).");
+         return NULL;
+     }
+     vpi_printf("pyvpi_RegisterCb is running0...%d,%x\n",cbdata->_vpi_cbdata.reason,cbdata->_vpi_cbdata.cb_rtn);
+     ans = vpi_register_cb(&cbdata->_vpi_cbdata); 
+     vpi_printf("pyvpi_RegisterCb is running1...\n");
+     cbdata->cb_h = ans;     
+     if(pyvpi_CheckError())
+        return NULL;
+     vpi_printf("pyvpi_RegisterCb is running2...\n");
+     return Py_BuildValue("l", ans);
+ }
+ 
+  static PyObject* pyvpi_RemoveCb(PyObject *self, PyObject *args)
+ {
+     vpiHandle  cb_obj;
+     PLI_INT32  ans;
+     if (!PyArg_ParseTuple(args, "l", &cb_obj))
+     {
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int).");
+         return NULL;
+     }
+     ans = vpi_remove_cb(cb_obj);
+     if(pyvpi_CheckError())
+        return NULL;
+     return Py_BuildValue("i", ans);
+ }
+ 
+  static PyObject* pyvpi_GetCbInfo(PyObject *self, PyObject *args)
+ {
+     vpiHandle  object;
+     p_pyvpi_cbdata cbdata;
+     if (!PyArg_ParseTuple(args, "l", &object))
+     {
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int).");
+         return NULL;
+     }
+     //Initial cbdata;
+     cbdata = (p_pyvpi_cbdata) pyvpi_cbdata_Type.tp_alloc(&pyvpi_cbdata_Type, 0);
+     Py_INCREF(cbdata);
+     vpi_get_cb_info(object,&cbdata->_vpi_cbdata);
+     if(pyvpi_CheckError())
+        return NULL;
+     return (PyObject*) cbdata;
+ }
+ 
  static PyMethodDef pyvpi_Methods[] = {
     /* for obtaining handles */
     {"HandleByName",    pyvpi_HandleByName,     METH_VARARGS,   "vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, vpiHandle scope)."},
@@ -198,9 +256,12 @@ static int pyvpi_CheckError( void )
     {"Iterate",         pyvpi_Iterate,          METH_VARARGS,   "vpiHandle  vpi_iterate (PLI_INT32 type, vpiHandle refHandle)"},
     {"Scan",            pyvpi_Scan,             METH_VARARGS,   "vpiHandle  vpi_scan    (vpiHandle iterator)"},
     /* for processing properties */
-    {"Get",             pyvpi_Get,              METH_VARARGS,"PLI_INT32  vpi_get             (PLI_INT32 property, vpiHandle object)."},
-    {"Get64",           pyvpi_Get64,            METH_VARARGS,"PLI_INT64  vpi_get64          (PLI_INT32 property, vpiHandle object)."},
-    {"GetStr",          pyvpi_GetStr,           METH_VARARGS,"PLI_BYTE8 *vpi_get_str         (PLI_INT32 property, vpiHandle object)."},
+    {"Get",             pyvpi_Get,              METH_VARARGS,   "PLI_INT32  vpi_get             (PLI_INT32 property, vpiHandle object)."},
+    {"Get64",           pyvpi_Get64,            METH_VARARGS,   "PLI_INT64  vpi_get64           (PLI_INT32 property, vpiHandle object)."},
+    {"GetStr",          pyvpi_GetStr,           METH_VARARGS,   "PLI_BYTE8 *vpi_get_str         (PLI_INT32 property, vpiHandle object)."},
+    {"RegisterCb",      pyvpi_RegisterCb,       METH_VARARGS,   "vpiHandle  vpi_register_cb     (p_cb_data cb_data_p)."},
+    {"RemoveCb",        pyvpi_RemoveCb,         METH_VARARGS,   "PLI_INT32  vpi_remove_cb       (vpiHandle cb_obj)."},
+    {"GetCbInfo",       pyvpi_GetCbInfo,        METH_VARARGS,   "void       vpi_get_cb_info     (vpiHandle object, <out>p_cb_data cb_data_p)."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -212,7 +273,10 @@ PyMODINIT_FUNC initpyvpi(void)
     //Check user type is ready..
     if (PyType_Ready(&pyvpi_value_Type) < 0)
         return;
+    if (PyType_Ready(&pyvpi_cbdata_Type) < 0)
+        return;
         
+    //
     m = Py_InitModule("pyvpi", pyvpi_Methods);
     if (m == NULL)
         return;
@@ -229,6 +293,8 @@ PyMODINIT_FUNC initpyvpi(void)
     //Add user type.
     Py_INCREF(&pyvpi_value_Type);
     PyModule_AddObject(m, "Value", (PyObject *)&pyvpi_value_Type);
+    Py_INCREF(&pyvpi_cbdata_Type);
+    PyModule_AddObject(m, "CbData", (PyObject *)&pyvpi_cbdata_Type);
 }
 
 //============================================================================

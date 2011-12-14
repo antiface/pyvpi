@@ -95,6 +95,9 @@ time      nb_mtreg [left-1:right-2];
 integer   nb_mireg [2:3];
 
   $test();
+  sreg = 1;
+  #10 sreg = 2;
+  $display("top display %d ",$time);
 end
 
 // ----- Named Fork -----
