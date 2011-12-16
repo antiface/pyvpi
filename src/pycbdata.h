@@ -1,8 +1,12 @@
+#ifndef __PYCBDATA_H__
+#define __PYCBDATA_H__
 #include "Python.h"
 #include "structmember.h"
 
 #include "vpi_user.h"
 #include "sv_vpi_user.h"
+
+#include "pyvalue.h"
 //typedef struct t_cb_data
 //{
 //  PLI_INT32    reason;                        /* callback reason */
@@ -118,3 +122,5 @@ static PyTypeObject pyvpi_cbdata_Type = {
     0,                         /* tp_alloc */
     pyvpi_cbdata_New,           /* tp_new */
 };
+
+#endif

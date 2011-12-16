@@ -1,9 +1,26 @@
+#ifndef __PYVALUE_H__
+#define __PYVALUE_H__
 #include "Python.h"
 #include "structmember.h"
 
 #include "vpi_user.h"
 #include "sv_vpi_user.h"
-
+//typedef struct t_vpi_value
+//{
+//  PLI_INT32 format; /* vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,
+//                           Vector,Strength,Suppress,Time,ObjType]Val */
+//  union
+//    {
+//      PLI_BYTE8                *str;       /* string value */
+//      PLI_INT32                 scalar;    /* vpi[0,1,X,Z] */
+//      PLI_INT32                 integer;   /* integer value */
+//      double                    real;      /* real value */
+//      struct t_vpi_time        *time;      /* time value */
+//      struct t_vpi_vecval      *vector;    /* vector value */
+//      struct t_vpi_strengthval *strength;  /* strength value */
+//      PLI_BYTE8                *misc;      /* ...other */
+//    } value;
+//} s_vpi_value, *p_vpi_value;
 /* ------------------------------------------------------------------------- */
 //PyObject vpi time struct data.
 typedef struct t_pyvpi_value
@@ -16,13 +33,23 @@ void pyvpi_value_Dealloc(p_pyvpi_value self);
 int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds);
 PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
+//Get/Set Functions ......
+//value
+PyObject * s_pyvpi_value_getvalue(s_pyvpi_value *self, void *closure);
+int        s_pyvpi_value_setvalue(s_pyvpi_value *self, PyObject *value, void *closure);
+
 static PyMethodDef  pyvpi_value_methods[] = {
     {NULL}
 };
 static PyMemberDef pyvpi_value_members[]  = {
+    {"format", T_UINT, offsetof(s_pyvpi_value, _vpi_value.format), 0, " format"},
     {NULL}
 };
-
+static PyGetSetDef pyvpi_value_getsets[]  = {
+    {"value", (getter)s_pyvpi_value_getvalue, 
+    (setter)s_pyvpi_value_setvalue,"get/set value.",NULL},
+    {NULL}
+};
 static PyTypeObject pyvpi_value_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -54,7 +81,7 @@ static PyTypeObject pyvpi_value_Type = {
     0,                         /* tp_iternext */
     pyvpi_value_methods,       /* tp_methods */
     pyvpi_value_members,       /* tp_members */
-    0,                         /* tp_getset */
+    pyvpi_value_getsets,       /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
     0,                         /* tp_descr_get */
@@ -64,3 +91,5 @@ static PyTypeObject pyvpi_value_Type = {
     0,                         /* tp_alloc */
     pyvpi_value_New,           /* tp_new */
 };
+
+#endif

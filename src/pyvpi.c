@@ -36,15 +36,15 @@ static int pyvpi_CheckError( void )
      PLI_BYTE8 *name;
      vpiHandle scope;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "sl", &name,&scope))
+     if (!PyArg_ParseTuple(args, "sk", &name,&scope))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (str,int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (str,long).");
          return NULL;
      }
      ans = vpi_handle_by_name(name,scope);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("l", ans);
+     return Py_BuildValue("k", ans);
  }
 /* 
  * XXTERN vpiHandle  vpi_handle_by_index PROTO_PARAMS((vpiHandle object,
@@ -55,15 +55,15 @@ static int pyvpi_CheckError( void )
      vpiHandle object;
      PLI_INT32 indx;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "li", &object,&indx))
+     if (!PyArg_ParseTuple(args, "ki", &object,&indx))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (long,int).");
          return NULL;
      }
      ans = vpi_handle_by_index(object,indx);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("l", ans);
+     return Py_BuildValue("k", ans);
  }
 
 /* for traversing relationships */
@@ -76,15 +76,15 @@ static int pyvpi_CheckError( void )
      vpiHandle type;
      PLI_INT32 refHandle;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "il", &type,&refHandle))
+     if (!PyArg_ParseTuple(args, "ik", &type,&refHandle))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,long).");
          return NULL;
      }
      ans = vpi_handle_by_index(type,refHandle);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("l", ans);
+     return Py_BuildValue("k", ans);
  }
 /*
     XXTERN vpiHandle  vpi_handle_multi    PROTO_PARAMS((PLI_INT32 type,
@@ -102,15 +102,15 @@ static int pyvpi_CheckError( void )
      PLI_INT32 type;
      vpiHandle refHandle;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "il", &type,&refHandle))
+     if (!PyArg_ParseTuple(args, "ik", &type,&refHandle))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,long).");
          return NULL;
      }
      ans = vpi_iterate(type,refHandle);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("l", ans);
+     return Py_BuildValue("k", ans);
  }
 /* 
     XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
@@ -119,15 +119,15 @@ static int pyvpi_CheckError( void )
  {
      vpiHandle iterator;
      vpiHandle ans;
-     if (!PyArg_ParseTuple(args, "l", &iterator))
+     if (!PyArg_ParseTuple(args, "k", &iterator))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (long).");
          return NULL;
      }
      ans = vpi_scan(iterator);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("l", ans);
+     return Py_BuildValue("k", ans);
  }
 
 /* for processing properties */
@@ -145,15 +145,15 @@ static int pyvpi_CheckError( void )
      PLI_INT32 property;
      vpiHandle object;
      PLI_INT32 ans;
-     if (!PyArg_ParseTuple(args, "il", &property,&object))
+     if (!PyArg_ParseTuple(args, "ik", &property,&object))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,long).");
          return NULL;
      }
      ans = vpi_get(property,object);
      if(pyvpi_CheckError())
         return NULL;
-     return Py_BuildValue("i", ans);
+     return Py_BuildValue("k", ans);
  }
 
  static PyObject* pyvpi_Get64(PyObject *self, PyObject *args)
@@ -161,9 +161,9 @@ static int pyvpi_CheckError( void )
      PLI_INT32 property;
      vpiHandle object;
      PLI_INT64 ans;
-     if (!PyArg_ParseTuple(args, "il", &property,&object))
+     if (!PyArg_ParseTuple(args, "ik", &property,&object))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,long).");
          return NULL;
      }
      ans = vpi_get(property,object);
@@ -177,9 +177,9 @@ static int pyvpi_CheckError( void )
      PLI_INT32 property;
      vpiHandle object;
      char  *ans;
-     if (!PyArg_ParseTuple(args, "il", &property,&object))
+     if (!PyArg_ParseTuple(args, "ik", &property,&object))
      {
-         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,int).");
+         PyErr_SetString(PyExc_TypeError,  "Error args, must be (int,long).");
          return NULL;
      }
      ans = vpi_get_str(property,object);
@@ -210,14 +210,14 @@ static int pyvpi_CheckError( void )
      if(pyvpi_CheckError())
         return NULL;
      vpi_printf("pyvpi_RegisterCb is running2...\n");
-     return Py_BuildValue("l", ans);
+     return Py_BuildValue("k", ans);
  }
  
   static PyObject* pyvpi_RemoveCb(PyObject *self, PyObject *args)
  {
      vpiHandle  cb_obj;
      PLI_INT32  ans;
-     if (!PyArg_ParseTuple(args, "l", &cb_obj))
+     if (!PyArg_ParseTuple(args, "k", &cb_obj))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int).");
          return NULL;
@@ -232,7 +232,7 @@ static int pyvpi_CheckError( void )
  {
      vpiHandle  object;
      p_pyvpi_cbdata cbdata;
-     if (!PyArg_ParseTuple(args, "l", &object))
+     if (!PyArg_ParseTuple(args, "k", &object))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (int).");
          return NULL;

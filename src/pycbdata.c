@@ -14,20 +14,27 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
  */
 int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};    
+    static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};
+    static s_vpi_value _value = {vpiHexStrVal}; //TBD
+    //This code will be updated,TBD    
+    //p_pyvpi_value    pvalue = (p_pyvpi_value) pyvpi_value_New(&pyvpi_value_Type,Py_None,Py_None);    
+    //vpi_printf("cb is initial...%x\n",_pyvpi_cb_rtn);
+    //pyvpi_value_Init(pvalue,Py_None,Py_None);
+    self->_vpi_cbdata.value = &_value;
+    //TBD, add pyvpi_Value, etc...
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|il", kwlist,
                                       &self->_vpi_cbdata.reason,
                                       &self->_vpi_cbdata.obj))
         return -1;
-    self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn
-    vpi_printf("cb is initial...%x\n",_pyvpi_cb_rtn);
+    self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn.
+    self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.        
     return 0;
 }
 
 PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    p_pyvpi_cbdata   self;
-    self = (p_pyvpi_cbdata)type->tp_alloc(type, 0);
+    p_pyvpi_cbdata   self;      
+    self = (p_pyvpi_cbdata)type->tp_alloc(type, 0);    
     return (PyObject *) self;
 }
 
@@ -70,6 +77,7 @@ int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void 
         return -1;
     }
     self->_vpi_cbdata.obj = (vpiHandle)PyLong_AsLong(value);
+    vpi_printf("set trig obj %d.\n",self->_vpi_cbdata.obj);
     return 0;
 }
 //trigger time
@@ -139,7 +147,7 @@ PLI_INT32 _pyvpi_cb_rtn(p_cb_data data)
     PyObject *arglist;
     vpi_printf("_pyvpi_cb_rtn is running.");
     //In this function, we must convert data to s_pyvpi_cbdata;
-    p_pyvpi_cbdata self = (s_pyvpi_cbdata *) (data - offsetof(s_pyvpi_cbdata,_vpi_cbdata));
+    p_pyvpi_cbdata self = (s_pyvpi_cbdata *) data->user_data;
     //Return -1 if callback is not callback...
     if (!PyCallable_Check(self->callback)) return -1;    
     arglist = Py_BuildValue("(O)",self);

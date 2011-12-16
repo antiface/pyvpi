@@ -3,8 +3,8 @@ export PYTHONPATH = .:../src
 
 INC_PATH      = -I$(MTI_HOME)/include
 INC_PATH     += -I$(PY_HOME)/include/python2.7
-LIB_PATH      = -L$(PY_HOME)/lib -L$(MTI_HOME)/linux_x86_64
-LIB_REF       = -lpython2.7 -lvsim -lm -ldl -lutil
+LIB_PATH      = -L$(PY_HOME)/lib
+LIB_REF       = -lpython2.7 -lm -ldl -lutil
 CFLAGS        = -c -g $(INC_PATH) -fPIC
 SRC_C         = ../src/pyvpi.c ../src/pyvalue.c ../src/pycbdata.c
 SRC_O         = pyvpi.o pyvalue.o pycbdata.o

@@ -2,8 +2,10 @@
 import pyvpi
 import sv_vpi_user as cons
 print dir(pyvpi)
-print type(pyvpi.HandleByName("top.sreg",0))
+print pyvpi.HandleByName("top.sreg",0)
+print pyvpi.HandleByName("top.sreg",0)
 cb = pyvpi.CbData()
+print type(cb)
 cb.reason = cons.cbAtEndOfSimTime
 cb.trgobj = pyvpi.HandleByName("top.sreg",0)
 def callback(arg):
