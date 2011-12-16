@@ -49,7 +49,8 @@ void pyvpi_value_Dealloc(p_pyvpi_value self)
     //Free self.
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._Value is release,ptr is 0x%x.\n",self);
-#endif    
+#endif
+    if(self->cache_ptr != NULL) free(self->cache_ptr);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -58,6 +59,9 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"format", NULL};
     
     self->_vpi_value.format = vpiHexStrVal; //Default value.
+    self->_vpi_value.value.str = self->cache_ptr;
+    self->_vpi_value.value.str[0] = 0;
+    self->vec_size = 0;    
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,                                      
                                       &self->_vpi_value.format))
         return -1;
@@ -70,13 +74,21 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
 PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     p_pyvpi_value   self;
+    int i = 0;
     self = (p_pyvpi_value)type->tp_alloc(type, 0);
+    if(self == NULL) 
+        return NULL;
+    self->cache_size = 512;     //Default cache value is 512 bytes.
+    self->cache_ptr  = (void *) malloc(self->cache_size);   
+    if(self->cache_ptr == NULL) {
+        Py_DECREF(self);
+        return NULL;
+    }   
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._Value is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
 #endif 
     return (PyObject *) self;
 }
-
 
 //Get/Set
 PyObject * s_pyvpi_value_getvalue(s_pyvpi_value *self, void *closure)
@@ -139,3 +151,74 @@ int        s_pyvpi_value_setvalue(s_pyvpi_value *self, PyObject *value, void *cl
             return -1;
     }
 }
+
+/*
+ * Copy s_vpi_value structure - must first allocate pointed to fields.
+ * nvalp must be previously allocated.
+ * Need to first determine size for vector value.
+ */
+void copy_vpi_value(s_vpi_value *nvalp, s_vpi_value *ovalp, PLI_INT32 blen, PLI_INT32 nd_alloc)
+{
+    //Need Check allocate failed.. TBD
+    int i;
+    PLI_INT32 numvals;
+    nvalp->format = ovalp->format;
+    switch (nvalp->format) {
+    /* all string values */
+    case vpiBinStrVal:
+    case vpiOctStrVal:
+    case vpiDecStrVal:
+    case vpiHexStrVal:
+    case vpiStringVal:
+        if (nd_alloc) {
+            if(nvalp->value.str != NULL) free(nvalp->value.str);
+            nvalp->value.str = malloc(nd_alloc);
+        }
+        else {
+            strcpy(nvalp->value.str, ovalp->value.str);
+        }
+        break;
+    case vpiScalarVal:
+        nvalp->value.scalar = ovalp->value.scalar;
+        break;
+    case vpiIntVal:
+        nvalp->value.integer = ovalp->value.integer;
+        break;
+    case vpiRealVal:
+        nvalp->value.real = ovalp->value.real;
+        break;
+    case vpiVectorVal:
+        numvals = (blen + 31) >> 5;
+        if (nd_alloc)
+        {
+            if(nvalp->value.vector != NULL) free(nvalp->value.vector);
+            nvalp->value.vector = (p_vpi_vecval) malloc(nd_alloc);
+        }
+        /* t_vpi_vecval is really array of the 2 integer a/b sections */
+        /* memcpy or bcopy better here */
+        for (i = 0; i <numvals; i++)
+        nvalp->value.vector[i] = ovalp->value.vector[i];
+        break;
+    case vpiStrengthVal:
+        if (nd_alloc)
+        {
+            if(nvalp->value.strength != NULL) free(nvalp->value.strength);
+            nvalp->value.strength = (p_vpi_strengthval) malloc(nd_alloc);
+        }
+        /* assumes C compiler supports struct assign */
+        *(nvalp->value.strength) = *(ovalp->value.strength);
+        break;
+    case vpiTimeVal:
+        nvalp->value.time = (p_vpi_time) malloc(sizeof(s_vpi_time));
+        /* assumes C compiler supports struct assign */
+        *(nvalp->value.time) = *(ovalp->value.time);
+        break;
+        /* not sure what to do here? */
+    case vpiObjTypeVal: case vpiSuppressVal:
+    vpi_printf(
+        "**ERR: cannot copy vpiObjTypeVal or vpiSuppressVal formats",
+        " - not for filled records.\n");
+        break;
+    }
+}
+

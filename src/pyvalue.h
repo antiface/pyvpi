@@ -29,11 +29,17 @@ typedef struct t_pyvpi_value
 {
     PyObject_HEAD
     s_vpi_value  _vpi_value;      //struct vpi time.
+    PLI_UINT32   vec_size;        //vector size.
+    PLI_UINT32   cache_size;      //Cache size, used to store vector/string/strength/misc/time
+    void*        cache_ptr;
 } s_pyvpi_value, *p_pyvpi_value;
 
 extern void pyvpi_value_Dealloc(p_pyvpi_value self);
 extern int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds);
 extern PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+
+//misc
+extern void copy_vpi_value(s_vpi_value *nvalp, s_vpi_value *ovalp, PLI_INT32 blen, PLI_INT32 nd_alloc);
 
 //Get/Set Functions ......
 //value
@@ -44,7 +50,8 @@ static PyMethodDef  pyvpi_value_methods[] = {
     {NULL}
 };
 static PyMemberDef pyvpi_value_members[]  = {
-    {"format", T_UINT, offsetof(s_pyvpi_value, _vpi_value.format), 0, " format"},
+    {"format",  T_UINT, offsetof(s_pyvpi_value, _vpi_value.format), 0, " format"},
+    {"vec_size", T_UINT, offsetof(s_pyvpi_value, vec_size), READONLY,  " vector size"},
     {NULL}
 };
 static PyGetSetDef pyvpi_value_getsets[]  = {

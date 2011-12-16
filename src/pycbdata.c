@@ -223,16 +223,66 @@ int        s_pyvpi_cbdata_setcallback(s_pyvpi_cbdata *self, PyObject *value, voi
     self->callback = value;
     return 0;
 }
+
 /* _pyvpi_cb_rtn(p_cb_data) :
  * Function for callback.
  */
 PLI_INT32 _pyvpi_cb_rtn(p_cb_data data)
 {
     PyObject *arglist;
+    int      blen = 0,nd_alloc = 0;
     //In this function, we must convert data to s_pyvpi_cbdata;
     p_pyvpi_cbdata self = (s_pyvpi_cbdata *) data->user_data;
+    p_pyvpi_value  pv   = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
     //Return -1 if callback is not callback...
-    if (!PyCallable_Check(self->callback)) return -1;    
+    if (!PyCallable_Check(self->callback)) return -1;
+    
+    //1. We must copy the tmp value to our struct...    
+    //First, Check bit length if the value format is vpiVectorVal.
+    if(data->value->format == vpiVectorVal) {
+        blen = vpi_get(vpiSize,data->obj);
+        pyvpi_CheckError();   //TBD Strange here...
+        pv->vec_size  = blen;
+    }
+    
+    if(blen < 0) blen = 0; //???Need or not TBD
+    //Second , Check need allocate space or not?
+    if(blen/32 + 1 > pv->cache_size) {
+        nd_alloc = pv->cache_size * 2;        
+    }
+    if(data->value->format == vpiStringVal || 
+       data->value->format == vpiBinStrVal ||
+       data->value->format == vpiOctStrVal ||
+       data->value->format == vpiDecStrVal ||
+       data->value->format == vpiHexStrVal)
+    {
+        if(strlen(data->value->value.str) > pv->cache_size)
+            nd_alloc = pv->cache_size * 2;
+    }
+#ifdef PYVPI_DEBUG
+    if(nd_alloc) {
+        vpi_printf("[PYVPI_DEBUG] _pyvpi_cb_rtn  need alloc new memory, blen is 0x%x, nd_alloc is 0x%x.\n",blen,nd_alloc);
+    }
+#endif
+    copy_vpi_value(self->_vpi_cbdata.value,data->value,blen,nd_alloc);
+    
+    if(nd_alloc) {    
+        switch(pv->_vpi_value.format){
+            case vpiBinStrVal: 
+            case vpiOctStrVal: 
+            case vpiDecStrVal:
+            case vpiHexStrVal: 
+            case vpiStringVal:
+                pv->cache_ptr = (void *) pv->_vpi_value.value.str;
+            case vpiVectorVal:                
+                pv->cache_ptr = (void *) pv->_vpi_value.value.vector;
+            default : 
+                return -1;
+        }        
+    }
+    
+    //2. We must copy the tmp time to our struct...
+    *(self->_vpi_cbdata.time) = *(data->time);    
     arglist = Py_BuildValue("(O)",self);
     (void) PyObject_CallObject(self->callback, arglist);
     Py_DECREF(arglist);

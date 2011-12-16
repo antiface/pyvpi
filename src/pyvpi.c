@@ -13,7 +13,7 @@ static PyObject *PyError;
  * Checks if an error was reported by the last vpi function called
  * and, if so, set VpiError and return error code.
  *****************************************************************************/
-static int pyvpi_CheckError( void )
+int pyvpi_CheckError( void )
 {
     int              error_code;
     s_vpi_error_info error_info;
@@ -274,7 +274,7 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("pyvpi_value_Type is <0x%x>.\n",&pyvpi_value_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_value_Type is <0x%x>.\n",&pyvpi_value_Type);
 #endif
 
     if (PyType_Ready(&pyvpi_cbdata_Type) < 0)
@@ -283,7 +283,7 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("pyvpi_cbdata_Type is <0x%x>.\n",&pyvpi_cbdata_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_cbdata_Type is <0x%x>.\n",&pyvpi_cbdata_Type);
 #endif
 
     //

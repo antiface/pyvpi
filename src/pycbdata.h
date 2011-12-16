@@ -56,7 +56,7 @@ int        s_pyvpi_cbdata_setcallback(s_pyvpi_cbdata *self, PyObject *value, voi
 /* _pyvpi_cb_rtn(p_cb_data) :
  * Function for callback.
  */
-PLI_INT32 _pyvpi_cb_rtn(p_cb_data data);
+extern PLI_INT32 _pyvpi_cb_rtn(p_cb_data data);
 
 static PyMethodDef  pyvpi_cbdata_methods[] = {
     {NULL}

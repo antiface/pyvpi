@@ -6,6 +6,8 @@
 #include "pycbdata.h"
 #include "pyvalue.h"
 
+#include "pyvpi.h"
+
 extern PyTypeObject pyvpi_value_Type;
 extern PyTypeObject pyvpi_cbdata_Type;
 #endif

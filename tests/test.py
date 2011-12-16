@@ -8,6 +8,7 @@ cb.reason = cons.cbValueChange
 cb.value  = val
 cb.trgobj = pyvpi.HandleByName("top.sreg",0)
 def callback(arg):
+    print arg.value.value
     print "callback is run..."
 cb.callback = callback
 cb_h = pyvpi.RegisterCb(cb)
