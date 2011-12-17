@@ -78,9 +78,11 @@ PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self = (p_pyvpi_value)type->tp_alloc(type, 0);
     if(self == NULL) 
         return NULL;
-    self->cache_size = 512;     //Default cache value is 512 bytes.
+    self->cache_size = 128;     //Default cache value is 128 bytes.
     self->cache_ptr  = (void *) malloc(self->cache_size);   
     if(self->cache_ptr == NULL) {
+        PyErr_SetString(PyExc_MemoryError,
+                        "There is no enouth memory for value assign.");    
         Py_DECREF(self);
         return NULL;
     }   
@@ -119,30 +121,63 @@ PyObject * s_pyvpi_value_getvalue(s_pyvpi_value *self, void *closure)
 }
 int        s_pyvpi_value_setvalue(s_pyvpi_value *self, PyObject *value, void *closure)
 {
+     char * str;
     if (value == NULL) {
         PyErr_SetString(PyExc_TypeError, "Cannot set index to NULL.");
         return -1;
     }
-//    if (! PyInt_Check(value)) {
-//        PyErr_SetString(PyExc_TypeError,
-//                        "The index must be a int.");
-//        return -1;
-//    }
+
     switch(self->_vpi_value.format){
         case vpiBinStrVal: 
         case vpiOctStrVal: 
         case vpiDecStrVal:
         case vpiHexStrVal: 
-        case vpiStringVal:
-            //Need malloc new space or not??
-            
+        case vpiStringVal:           
+            if (! PyString_Check(value)) {
+                PyErr_SetString(PyExc_TypeError,
+                                "The value must be a string<Current format is string>.");
+                return -1;
+            }
+            str = PyString_AS_STRING(value);
+            if(strlen(str) > (self->cache_size - 1))
+            {
+                //new space will be allocate.
+                char* nstr = (char *) malloc(self->cache_size * 2);
+                if(nstr != NULL) {
+                    self->cache_size = self->cache_size *2;
+                    free(self->cache_ptr);
+                    self->cache_ptr = nstr;                    
+                }
+                else {
+                    PyErr_SetString(PyExc_MemoryError,
+                                    "There is no enouth memory for value assign.");
+                    return -1;
+                }
+            }            
+            strcpy(self->cache_ptr,str);
+            self->_vpi_value.value.str = self->cache_ptr;
         case vpiScalarVal:
-            
+            if (! PyInt_Check(value) || PyInt_AS_LONG(value) < 0 || PyInt_AS_LONG(value) > 3) {
+                PyErr_SetString(PyExc_TypeError,
+                                "The value must be vpi[0,1,X,Z]<Current format is vpiScalarVal>.");
+                return -1;
+            }
+            self->_vpi_value.value.scalar = PyInt_AS_LONG(value);
         case vpiIntVal:
-            
+            if (! PyInt_Check(value)) {
+                PyErr_SetString(PyExc_TypeError,
+                                "The value must be an int<Current format is vpiIntVal>.");
+                return -1;
+            }
+            self->_vpi_value.value.integer = PyInt_AS_LONG(value);            
         case vpiRealVal:
-            
-        case vpiVectorVal:  //TBD
+            if (! PyFloat_Check(value)) {
+                PyErr_SetString(PyExc_TypeError,
+                                "The value must be an float<Current format is vpiRealVal>.");
+                return -1;
+            }
+            self->_vpi_value.value.real = PyFloat_AsDouble(value);              
+        case vpiVectorVal:  //TBD How to deal with Vector? So confused.
         case vpiStrengthVal:  //TBD
         case vpiTimeVal : //TBD
         case vpiObjTypeVal: //TBD
@@ -150,6 +185,7 @@ int        s_pyvpi_value_setvalue(s_pyvpi_value *self, PyObject *value, void *cl
         default : 
             return -1;
     }
+    return 0;
 }
 
 /*

@@ -3,6 +3,9 @@
 
 #define PYVPI_DEBUG
 
+#include "pyvector.h"
+#include "pytime.h"
+#include "pystrength.h"
 #include "pycbdata.h"
 #include "pyvalue.h"
 
@@ -10,4 +13,6 @@
 
 extern PyTypeObject pyvpi_value_Type;
 extern PyTypeObject pyvpi_cbdata_Type;
+extern PyTypeObject pyvpi_time_Type;
+extern PyTypeObject pyvpi_strengthval_Type;
 #endif

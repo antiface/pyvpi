@@ -6,8 +6,8 @@ INC_PATH     += -I$(PY_HOME)/include/python2.7
 LIB_PATH      = -L$(PY_HOME)/lib
 LIB_REF       = -lpython2.7 -lm -ldl -lutil
 CFLAGS        = -c -g $(INC_PATH) -fPIC
-SRC_C         = ../src/pyvpi.c ../src/pyvalue.c ../src/pycbdata.c
-SRC_O         = pyvpi.o pyvalue.o pycbdata.o
+SRC_C         = ../src/pyvpi.c ../src/pyvalue.c ../src/pycbdata.c ../src/pytime.c ../src/pystrength.c ../src/pyvector.c
+SRC_O         = pyvpi.o pyvalue.o pycbdata.o pytime.o pystrength.o pyvector.o
 
 all : clean comp vpi run
 

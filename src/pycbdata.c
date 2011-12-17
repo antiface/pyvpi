@@ -46,8 +46,11 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
 {
     //Free self.
     p_pyvpi_value pvalue;
+    p_pyvpi_time  ptime;
     pvalue = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
     Py_DECREF(pvalue);
+    ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
+    Py_DECREF(ptime);
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is release,ptr is 0x%x.\n",self);
 #endif
@@ -77,7 +80,7 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     p_pyvpi_cbdata   self;
     p_pyvpi_value    pvalue;
-    static s_vpi_time  _time  = {vpiSimTime};   //TBD
+    p_pyvpi_time     ptime;
     
     self = (p_pyvpi_cbdata)type->tp_alloc(type, 0);
     if(!self){
@@ -91,13 +94,17 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_TypeError, "Can't new a pyvpi._Value object.");
         return NULL;
     }
-
-    //This code will be updated,TBD
-    self->_vpi_cbdata.time = &_time;
     
     //Py_INCREF(pvalue);  //Add reference for value. <Don't add pvalue reference.>
     self->_vpi_cbdata.value = &pvalue->_vpi_value;
-        
+
+    ptime = (p_pyvpi_time) pyvpi_time_New(&pyvpi_time_Type,PyTuple_New(0),PyDict_New());
+    pyvpi_time_Init(ptime,PyTuple_New(0),PyDict_New());
+    if(!ptime){
+        PyErr_SetString(PyExc_TypeError, "Can't new a pyvpi._Time object.");
+        return NULL;
+    }
+    self->_vpi_cbdata.time = &ptime->_vpi_time;
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi_cbdata is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
 #endif
@@ -149,11 +156,28 @@ int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void 
 //trigger time
 PyObject * s_pyvpi_cbdata_gettime(s_pyvpi_cbdata *self, void *closure)
 {
-    return NULL;
+    p_pyvpi_time ptime;
+    ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
+    Py_INCREF(ptime);
+    return (PyObject *) ptime;
 }
 int        s_pyvpi_cbdata_settime(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
-    return -1;
+    p_pyvpi_time ptime, tmp = (p_pyvpi_time) value;
+    ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Can't set time object to NULL.");
+        return -1;
+    }
+    if (! PyObject_TypeCheck(value,&pyvpi_time_Type)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "The value object be a pyvpi._Time.");
+        return -1;
+    }
+    Py_DECREF(ptime);
+    Py_INCREF(tmp);
+    self->_vpi_cbdata.time = &tmp->_vpi_time;
+    return 0;
 }
 //value
 PyObject * s_pyvpi_cbdata_getvalue(s_pyvpi_cbdata *self, void *closure)
@@ -256,7 +280,7 @@ PLI_INT32 _pyvpi_cb_rtn(p_cb_data data)
        data->value->format == vpiDecStrVal ||
        data->value->format == vpiHexStrVal)
     {
-        if(strlen(data->value->value.str) > pv->cache_size)
+        if(strlen(data->value->value.str) > (pv->cache_size - 1))
             nd_alloc = pv->cache_size * 2;
     }
 #ifdef PYVPI_DEBUG
@@ -266,7 +290,7 @@ PLI_INT32 _pyvpi_cb_rtn(p_cb_data data)
 #endif
     copy_vpi_value(self->_vpi_cbdata.value,data->value,blen,nd_alloc);
     
-    if(nd_alloc) {    
+    if(nd_alloc) {
         switch(pv->_vpi_value.format){
             case vpiBinStrVal: 
             case vpiOctStrVal: 

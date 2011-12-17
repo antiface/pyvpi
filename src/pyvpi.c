@@ -286,7 +286,25 @@ PyMODINIT_FUNC initpyvpi(void)
     vpi_printf("[PYVPI_DEBUG] pyvpi_cbdata_Type is <0x%x>.\n",&pyvpi_cbdata_Type);
 #endif
 
-    //
+    if (PyType_Ready(&pyvpi_time_Type) < 0)
+    {
+        vpi_printf("Error : pyvpi_time_Type is not Ready.\n");
+        return;
+    }
+#ifdef PYVPI_DEBUG    
+    vpi_printf("[PYVPI_DEBUG] pyvpi_time_Type is <0x%x>.\n",&pyvpi_time_Type);
+#endif
+
+    if (PyType_Ready(&pyvpi_strengthval_Type) < 0)
+    {
+        vpi_printf("Error : pyvpi_strengthval_Type is not Ready.\n");
+        return;
+    }
+#ifdef PYVPI_DEBUG    
+    vpi_printf("[PYVPI_DEBUG] pyvpi_strengthval_Type is <0x%x>.\n",&pyvpi_strengthval_Type);
+#endif
+
+    //Initial the module.
     m = Py_InitModule("pyvpi", pyvpi_Methods);
     if (m == NULL)
         return;
@@ -299,12 +317,17 @@ PyMODINIT_FUNC initpyvpi(void)
     //Add python Error in pyvpi module.
     PyError = PyErr_NewException("pyvpi.PyError", NULL, NULL);
     Py_INCREF(PyError);
-    PyModule_AddObject(m, "PyError", PyError);    
+    PyModule_AddObject(m, "PyError", PyError);
+    
     //Add user type.
     Py_INCREF(&pyvpi_value_Type);
     PyModule_AddObject(m, "Value", (PyObject *)&pyvpi_value_Type);
     Py_INCREF(&pyvpi_cbdata_Type);
     PyModule_AddObject(m, "CbData", (PyObject *)&pyvpi_cbdata_Type);
+    Py_INCREF(&pyvpi_time_Type);
+    PyModule_AddObject(m, "Time", (PyObject *)&pyvpi_time_Type);
+    Py_INCREF(&pyvpi_cbdata_Type);
+    PyModule_AddObject(m, "Strength", (PyObject *)&pyvpi_strengthval_Type);
 }
 
 //============================================================================
