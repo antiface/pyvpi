@@ -24,9 +24,9 @@ typedef struct t_pyvpi_time
     s_vpi_time  _vpi_time;      //struct vpi time.
 } s_pyvpi_time, *p_pyvpi_time;
 
-void pyvpi_time_Dealloc(p_pyvpi_time self);
-int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds);
-PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+extern void pyvpi_time_Dealloc(p_pyvpi_time self);
+extern int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds);
+extern PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
 static PyMethodDef  pyvpi_time_methods[] = {
     {NULL}

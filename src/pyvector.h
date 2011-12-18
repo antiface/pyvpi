@@ -17,20 +17,38 @@
 typedef struct t_pyvpi_vector
 {
     PyObject_HEAD
-    s_vpi_vecval  *_vpi_vector;      //struct vpi vector point.
+    s_vpi_vecval  *_vpi_vector; //struct vpi vector point.
+    PLI_UINT32  size;
+    PLI_UINT32  cache_size;      //Cache size, used to store s_vpi_vecval vector,unit is sizeof(s_vpi_vecval)-> 32bit
+    p_vpi_vecval cache_ptr;    
 } s_pyvpi_vector, *p_pyvpi_vector;
 
-void pyvpi_vector_Dealloc(p_pyvpi_vector self);
-int  pyvpi_vector_Init(s_pyvpi_vector *self, PyObject *args, PyObject *kwds);
-PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+extern void pyvpi_vector_Dealloc(p_pyvpi_vector self);
+extern int  pyvpi_vector_Init(s_pyvpi_vector *self, PyObject *args, PyObject *kwds);
+extern PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+
+//Misc Functions ... ...
+//Update cache if size is changed, return 0 successful, -1 failed.
+static PLI_INT32 update_cache(s_pyvpi_vector *self);
+
+//Get/Set Functions ... ...
+//size
+PyObject * s_pyvpi_vector_getsize(s_pyvpi_vector *self, void *closure);
+int        s_pyvpi_vector_setsize(s_pyvpi_vector *self, PyObject *value, void *closure);
+PyObject * s_pyvpi_vector_getvalue(s_pyvpi_vector *self, void *closure);
+int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *closure);
 
 static PyMethodDef  pyvpi_vector_methods[] = {
     {NULL}
 };
-static PyMemberDef pyvpi_vector_members[]  = {
+static PyMemberDef pyvpi_vector_members[]  = {    
     {NULL}
 };
 static PyGetSetDef pyvpi_vector_getsets[]  = {
+    {"size", (getter)s_pyvpi_vector_getsize, 
+    (setter)s_pyvpi_vector_setsize,"get/set size.",NULL},
+    {"value", (getter)s_pyvpi_vector_getvalue, 
+    (setter)s_pyvpi_vector_setvalue,"get/set value.",NULL},
     {NULL}
 };
 #endif

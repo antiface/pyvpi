@@ -22,9 +22,9 @@ typedef struct t_pyvpi_strengthval
     s_vpi_strengthval  _vpi_strengthval;      //struct vpi strengthval.
 } s_pyvpi_strengthval, *p_pyvpi_strengthval;
 
-void pyvpi_strengthval_Dealloc(p_pyvpi_strengthval self);
-int  pyvpi_strengthval_Init(s_pyvpi_strengthval *self, PyObject *args, PyObject *kwds);
-PyObject * pyvpi_strengthval_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+extern void pyvpi_strengthval_Dealloc(p_pyvpi_strengthval self);
+extern int  pyvpi_strengthval_Init(s_pyvpi_strengthval *self, PyObject *args, PyObject *kwds);
+extern PyObject * pyvpi_strengthval_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
 static PyMethodDef  pyvpi_strengthval_methods[] = {
     {NULL}

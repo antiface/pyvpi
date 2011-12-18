@@ -66,7 +66,6 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
 int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};    
-    //TBD, add pyvpi_Value, etc...
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|il", kwlist,
                                       &self->_vpi_cbdata.reason,
                                       &self->_vpi_cbdata.obj))
@@ -135,7 +134,11 @@ int        s_pyvpi_cbdata_setreason(s_pyvpi_cbdata *self, PyObject *value, void 
 //trigger object
 PyObject * s_pyvpi_cbdata_gettrgobj(s_pyvpi_cbdata *self, void *closure)
 {
-    return Py_BuildValue("K", self->_vpi_cbdata.obj);
+#ifdef __LP64__
+    return Py_BuildValue("k", self->_vpi_cbdata.obj);
+#else
+    return Py_BuildValue("I", self->_vpi_cbdata.obj);
+#endif
 }
 
 int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void *closure)
@@ -144,9 +147,9 @@ int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void 
         PyErr_SetString(PyExc_TypeError, "Can't set trigger object to NULL.");
         return -1;
     }
-    if (! PyLong_Check(value)) {
+    if (!(PyLong_Check(value)||PyInt_Check(value))) {
         PyErr_SetString(PyExc_TypeError,
-                        "The reason trigger object be a long.");
+                        "The reason trigger object be a long/int.");
         return -1;
     }
     self->_vpi_cbdata.obj = (vpiHandle)PyLong_AsLong(value);
@@ -266,47 +269,11 @@ PLI_INT32 _pyvpi_cb_rtn(p_cb_data data)
     if(data->value->format == vpiVectorVal) {
         blen = vpi_get(vpiSize,data->obj);
         pyvpi_CheckError();   //TBD Strange here...
-        pv->vec_size  = blen;
-    }
-    
-    if(blen < 0) blen = 0; //???Need or not TBD
-    //Second , Check need allocate space or not?
-    if(blen/32 + 1 > pv->cache_size) {
-        nd_alloc = pv->cache_size * 2;        
-    }
-    if(data->value->format == vpiStringVal || 
-       data->value->format == vpiBinStrVal ||
-       data->value->format == vpiOctStrVal ||
-       data->value->format == vpiDecStrVal ||
-       data->value->format == vpiHexStrVal)
-    {
-        if(strlen(data->value->value.str) > (pv->cache_size - 1))
-            nd_alloc = pv->cache_size * 2;
-    }
-#ifdef PYVPI_DEBUG
-    if(nd_alloc) {
-        vpi_printf("[PYVPI_DEBUG] _pyvpi_cb_rtn  need alloc new memory, blen is 0x%x, nd_alloc is 0x%x.\n",blen,nd_alloc);
-    }
-#endif
-    copy_vpi_value(self->_vpi_cbdata.value,data->value,blen,nd_alloc);
-    
-    if(nd_alloc) {
-        switch(pv->_vpi_value.format){
-            case vpiBinStrVal: 
-            case vpiOctStrVal: 
-            case vpiDecStrVal:
-            case vpiHexStrVal: 
-            case vpiStringVal:
-                pv->cache_ptr = (void *) pv->_vpi_value.value.str;
-            case vpiVectorVal:                
-                pv->cache_ptr = (void *) pv->_vpi_value.value.vector;
-            default : 
-                return -1;
-        }        
-    }
-    
+    }    
+    update_value(pv,data->value,blen); 
+
     //2. We must copy the tmp time to our struct...
-    *(self->_vpi_cbdata.time) = *(data->time);    
+    *(self->_vpi_cbdata.time) = *(data->time); //This will force change _Time object value.
     arglist = Py_BuildValue("(O)",self);
     (void) PyObject_CallObject(self->callback, arglist);
     Py_DECREF(arglist);

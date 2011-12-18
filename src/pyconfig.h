@@ -15,4 +15,5 @@ extern PyTypeObject pyvpi_value_Type;
 extern PyTypeObject pyvpi_cbdata_Type;
 extern PyTypeObject pyvpi_time_Type;
 extern PyTypeObject pyvpi_strengthval_Type;
+extern PyTypeObject pyvpi_vector_Type;
 #endif
