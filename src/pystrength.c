@@ -47,7 +47,7 @@ void pyvpi_strengthval_Dealloc(p_pyvpi_strengthval self)
 {
         //Free self.
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Strengthval is release,ptr is 0x%x.\n",self);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Strengthval is release,ptr is <0x%lx>.\n",self);
 #endif
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -70,7 +70,7 @@ PyObject * pyvpi_strengthval_New(PyTypeObject *type, PyObject *args, PyObject *k
 {
     p_pyvpi_strengthval self = (p_pyvpi_strengthval)type->tp_alloc(type, 0);
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Strengthval is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Strengthval is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
 #endif
     return (PyObject *) self;
 }

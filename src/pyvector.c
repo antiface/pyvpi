@@ -47,7 +47,7 @@ void pyvpi_vector_Dealloc(p_pyvpi_vector self)
 {
     //Free self.
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is release,ptr is 0x%x.\n",self);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is release,ptr is <0x%lx>.\n",self);
 #endif
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -60,7 +60,7 @@ int  pyvpi_vector_Init(s_pyvpi_vector *self, PyObject *args, PyObject *kwds)
                                       &self->size))
         return -1;    
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is Initial,size is 0x%x.\n",self->size);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is Initial,size is <0x%lx>.\n",self->size);
 #endif
     return update_cache(self);
 }
@@ -80,7 +80,7 @@ PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }    
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
 #endif
     return (PyObject *) self;
 }
@@ -178,24 +178,24 @@ int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *
     for(i = 0; i< numvals; i++){
         aval = 0;
         bval = 0;
-	if(i<vsize) { //Keep value didn't assgin zero.
-        	tpl = PyList_GetItem(value,i);
-        	if(PyTuple_Check(tpl)){
-        	    //If this is a tuple.
-        	    if(!PyArg_ParseTuple(tpl,"|II",&aval,&bval)){
-        	        PyErr_SetString(PyExc_TypeError, "Can't set None (|int) to value.");
-        	        return -1;
-        	    }
-        	}
-        	else if(PyLong_Check(tpl)) {
-        	    //If this is a long.
-        	    aval = PyLong_AsLong(tpl);
-        	}
-        	else if(PyInt_Check(tpl)){
-        	    //If this is a integer.
-        	    aval = PyInt_AS_LONG(tpl);
-        	}
-	}
+    if(i<vsize) { //Keep value didn't assgin zero.
+            tpl = PyList_GetItem(value,i);
+            if(PyTuple_Check(tpl)){
+                //If this is a tuple.
+                if(!PyArg_ParseTuple(tpl,"|II",&aval,&bval)){
+                    PyErr_SetString(PyExc_TypeError, "Can't set None (|int) to value.");
+                    return -1;
+                }
+            }
+            else if(PyLong_Check(tpl)) {
+                //If this is a long.
+                aval = PyLong_AsLong(tpl);
+            }
+            else if(PyInt_Check(tpl)){
+                //If this is a integer.
+                aval = PyInt_AS_LONG(tpl);
+            }
+    }
         self->_vpi_vector[i].aval = aval;
         self->_vpi_vector[i].aval = bval;
     }

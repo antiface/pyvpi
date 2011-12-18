@@ -47,7 +47,7 @@ void pyvpi_time_Dealloc(p_pyvpi_time self)
 {
     //Free self.
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Time is release,ptr is 0x%x.\n",self);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Time is release,ptr is <0x%lx>.\n",self);
 #endif
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -61,7 +61,7 @@ int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds)
                                       &self->_vpi_time.type))
         return -1;
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Time is Initial,type is 0x%x.\n",self->_vpi_time.type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Time is Initial,type is <0x%lx>.\n",self->_vpi_time.type);
 #endif
     return 0;
 }
@@ -70,7 +70,7 @@ PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_time self = (p_pyvpi_time)type->tp_alloc(type, 0);
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Time is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Time is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
 #endif
     return (PyObject *) self;
 }

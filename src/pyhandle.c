@@ -47,9 +47,9 @@ void pyvpi_handle_Dealloc(p_pyvpi_handle self)
 {
     //Free self.
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Handle is release,ptr is 0x%x.\n",self);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Handle is release,ptr is <0x%lx>.\n",self);
 #endif
-    if(self->_vpi_handle != NULL) vpi_free_object(self->_vpi_handle);
+    if(self->_vpi_handle != NULL) vpi_release_handle(self->_vpi_handle);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -70,7 +70,7 @@ PyObject * pyvpi_handle_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     p_pyvpi_handle self = (p_pyvpi_handle)type->tp_alloc(type, 0);
     self->_vpi_handle = NULL;
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Handle is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Handle is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
 #endif
     return (PyObject *) self;
 }

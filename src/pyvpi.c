@@ -135,8 +135,14 @@ int pyvpi_CheckError( void )
      ans = vpi_scan(iterator->_vpi_handle);
      if(pyvpi_CheckError())
         return NULL;
-     oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-     oans->_vpi_handle = ans;
+     if(ans != NULL) {
+        oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
+        oans->_vpi_handle = ans;
+     }
+     else {
+        Py_INCREF(Py_None);
+        oans = (p_pyvpi_handle) Py_None;
+     }
      return (PyObject *)oans;   
  }
 
@@ -204,8 +210,8 @@ int pyvpi_CheckError( void )
     vpiHandle  vpi_register_systf  (p_vpi_systf_data   systf_data_p);
     void       vpi_get_systf_info  (vpiHandle object, p_vpi_systf_data   systf_data_p);
  */
-  static PyObject* pyvpi_RegisterCb(PyObject *self, PyObject *args)
- {
+  static PyObject* pyvpi_RegisterCb(PyObject *self, PyObject *args) //TBD cbData will store cb_h,maybe need update 
+ {                                                                  //the args of vpi_remove_cb and vpi_get_cb_info.
      s_pyvpi_cbdata*  cbdata;
      vpiHandle  ans;
      p_pyvpi_handle oans; 
@@ -240,20 +246,27 @@ int pyvpi_CheckError( void )
  
   static PyObject* pyvpi_GetCbInfo(PyObject *self, PyObject *args)
  {
-     p_pyvpi_handle  object;
-     p_pyvpi_cbdata cbdata;
+     p_pyvpi_handle  object,trgobj;
+     p_pyvpi_cbdata  cbdata;
+     PyObject*       pdict = PyDict_New();
      if (!PyArg_ParseTuple(args, "O", &object))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (pyvpi._vpiHandle).");
          return NULL;
      }
      //Initial cbdata;
-     cbdata = (p_pyvpi_cbdata) pyvpi_cbdata_Type.tp_alloc(&pyvpi_cbdata_Type, 0);
-     Py_INCREF(cbdata);
-     vpi_get_cb_info(object->_vpi_handle,&cbdata->_vpi_cbdata);
-     if(pyvpi_CheckError())
-        return NULL;
-     return (PyObject*) cbdata;
+    cbdata = (p_pyvpi_cbdata) pyvpi_cbdata_New(&pyvpi_cbdata_Type,PyTuple_New(0),PyDict_New());
+    cbdata->cb_h = object->_vpi_handle;
+    vpi_get_cb_info(object->_vpi_handle,&cbdata->_vpi_cbdata);
+    // Add trgobj info.    
+    trgobj = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
+    trgobj -> _vpi_handle = cbdata->_vpi_cbdata.obj; //TBD , this handle will be refer two times, may case double free???
+    //Initial cbData...
+    PyDict_SetItem(pdict,PyString_FromString("trgobj"),(PyObject*) trgobj);
+    pyvpi_cbdata_Init(cbdata,PyTuple_New(0),pdict);
+    if(pyvpi_CheckError())
+       return NULL;
+    return (PyObject*) cbdata;
  }
  
  static PyMethodDef pyvpi_Methods[] = {
@@ -287,7 +300,7 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("[PYVPI_DEBUG] pyvpi_value_Type is <0x%x>.\n",&pyvpi_value_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_value_Type is <0x%lx>.\n",&pyvpi_value_Type);
 #endif
 
     if (PyType_Ready(&pyvpi_cbdata_Type) < 0)
@@ -296,7 +309,7 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("[PYVPI_DEBUG] pyvpi_cbdata_Type is <0x%x>.\n",&pyvpi_cbdata_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_cbdata_Type is <0x%lx>.\n",&pyvpi_cbdata_Type);
 #endif
 
     if (PyType_Ready(&pyvpi_time_Type) < 0)
@@ -305,7 +318,7 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("[PYVPI_DEBUG] pyvpi_time_Type is <0x%x>.\n",&pyvpi_time_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_time_Type is <0x%lx>.\n",&pyvpi_time_Type);
 #endif
 
     if (PyType_Ready(&pyvpi_strengthval_Type) < 0)
@@ -314,7 +327,7 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("[PYVPI_DEBUG] pyvpi_strengthval_Type is <0x%x>.\n",&pyvpi_strengthval_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_strengthval_Type is <0x%lx>.\n",&pyvpi_strengthval_Type);
 #endif
     
     if (PyType_Ready(&pyvpi_vector_Type) < 0)
@@ -323,7 +336,7 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("[PYVPI_DEBUG] pyvpi_vector_Type is <0x%x>.\n",&pyvpi_vector_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_vector_Type is <0x%lx>.\n",&pyvpi_vector_Type);
 #endif
     
     if (PyType_Ready(&pyvpi_handle_Type) < 0)
@@ -332,7 +345,16 @@ PyMODINIT_FUNC initpyvpi(void)
         return;
     }
 #ifdef PYVPI_DEBUG    
-    vpi_printf("[PYVPI_DEBUG] pyvpi_handle_Type is <0x%x>.\n",&pyvpi_handle_Type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi_handle_Type is <0x%lx>.\n",&pyvpi_handle_Type);
+#endif
+
+    if (PyType_Ready(&pyvpi_delays_Type) < 0)
+    {
+        vpi_printf("Error : pyvpi_delays_Type is not Ready.\n");
+        return;
+    }
+#ifdef PYVPI_DEBUG    
+    vpi_printf("[PYVPI_DEBUG] pyvpi_delays_Type is <0x%lx>.\n",&pyvpi_delays_Type);
 #endif
 
     //Initial the module.
@@ -363,6 +385,8 @@ PyMODINIT_FUNC initpyvpi(void)
     PyModule_AddObject(m, "Vector", (PyObject *)&pyvpi_vector_Type);
     Py_INCREF(&pyvpi_handle_Type);
     PyModule_AddObject(m, "vpiHandle", (PyObject *)&pyvpi_handle_Type);
+    Py_INCREF(&pyvpi_delays_Type);
+    PyModule_AddObject(m, "Delays", (PyObject *)&pyvpi_delays_Type);    
 }
 
 //============================================================================

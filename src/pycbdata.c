@@ -54,7 +54,7 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
     Py_DECREF(self->cb_h);
     Py_DECREF(self->obj_h);
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is release,ptr is 0x%x.\n",self);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is release,ptr is <0x%lx>.\n",self);
 #endif
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -67,13 +67,16 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
  */
 int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};
+    //static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};
+    static char *kwlist[] = {"reason","trgobj", NULL};
     p_pyvpi_handle        obj_h = (p_pyvpi_handle) Py_None;
     Py_INCREF(obj_h);
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist,
                                       &self->_vpi_cbdata.reason,
                                       &obj_h))
+    {
         return -1;
+    }
     
     Py_INCREF(obj_h);
     Py_DECREF(self->obj_h);    
@@ -84,7 +87,7 @@ int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
     self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn.
     self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is Initial\n");
+    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is Initial.\n");
 #endif    
     return 0;
 }
@@ -124,7 +127,7 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_INCREF(Py_None);
     self->cb_h = Py_None;
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
 #endif
     return (PyObject *) self;
 }

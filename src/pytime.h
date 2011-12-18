@@ -17,7 +17,6 @@
 
 /* ------------------------------------------------------------------------- */
 //PyObject vpi time struct data.
-//PyObject vpi time struct data.
 typedef struct t_pyvpi_time
 {
     PyObject_HEAD

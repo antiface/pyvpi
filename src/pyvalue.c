@@ -48,7 +48,7 @@ void pyvpi_value_Dealloc(p_pyvpi_value self)
 {
     //Free self.
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is release,ptr is 0x%x.\n",self);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is release,ptr is <0x%lx>.\n",self);
 #endif
     if(self->obj != NULL) Py_XDECREF(self->obj);
     self->ob_type->tp_free((PyObject*)self);
@@ -67,7 +67,7 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
         return -1;
     Py_DECREF(self->obj);
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is Initial,format is 0x%x.\n",self->_vpi_value.format);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is Initial,format is <0x%lx>.\n",self->_vpi_value.format);
 #endif
     return update_format(self,self->_vpi_value.format,NULL);
 }
@@ -82,7 +82,7 @@ PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_INCREF(Py_None);
     self-> obj = Py_None;
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
 #endif 
     return (PyObject *) self;
 }

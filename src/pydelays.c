@@ -1,0 +1,147 @@
+#include "pydelays.h"
+
+PyTypeObject pyvpi_delays_Type = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "pyvpi._Delay",              /*tp_name*/
+    sizeof(s_pyvpi_delays),     /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)pyvpi_delays_Dealloc, /*tp_dealloc*/    
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "pyvpi delays objects",     /* tp_doc */
+    0,                         /* tp_traverse */
+    0,                         /* tp_clear */
+    0,                         /* tp_richcompare */
+    0,                         /* tp_weaklistoffset */
+    0,                         /* tp_iter */
+    0,                         /* tp_iternext */
+    pyvpi_delays_methods,       /* tp_methods */
+    pyvpi_delays_members,       /* tp_members */
+    pyvpi_delays_getsets,       /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc) pyvpi_delays_Init, /* tp_init */
+    0,                         /* tp_alloc */
+    pyvpi_delays_New,           /* tp_new */
+};
+
+
+void pyvpi_delays_Dealloc(p_pyvpi_delays self)
+{
+    //Free self.
+#ifdef PYVPI_DEBUG
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Delay is release,ptr is <0x%lx>.\n",self);
+#endif
+    Py_DECREF(self->pdelays);
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+int  pyvpi_delays_Init(s_pyvpi_delays *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"delays","time_type","mtm_flag","append_flag","pulsere_flag", NULL};
+    int i;
+    PyObject*   tpl = NULL;
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Oiiii", kwlist,                                      
+                                      &tpl,
+                                      &self->_vpi_delay.time_type,
+                                      &self->_vpi_delay.mtm_flag,
+                                      &self->_vpi_delay.append_flag,
+                                      &self->_vpi_delay.pulsere_flag
+                                      ))
+        return -1;   
+    if(tpl != NULL && PyTuple_Check(tpl) && PyTuple_Size(tpl)) {
+        self->_vpi_delay.no_of_delays  = PyTuple_Size(tpl);
+        //Must check all items in tuple is pyvpi._Time
+        for(i=0; i < self->_vpi_delay.no_of_delays;i++){
+            if(!PyObject_TypeCheck(PyTuple_GetItem(tpl,i) ,&pyvpi_time_Type)){
+                PyErr_Format(PyExc_TypeError,  "Error delays in %d, all items in delays must be pyvpi._Time.", i);
+                self->pdelays =   PyTuple_New(0);
+                self->_vpi_delay.no_of_delays = 0;
+                return -1;
+            }
+        }
+        self->_vpi_delay.da = (p_vpi_time) malloc(self->_vpi_delay.no_of_delays * sizeof(s_vpi_time));  //Allocate memory.
+        //Copy all value to da;
+        for(i=0; i< self->_vpi_delay.no_of_delays; i++){
+            p_pyvpi_time pv = (p_pyvpi_time) PyTuple_GetItem(tpl,i);
+            self->_vpi_delay.da[i] = pv->_vpi_time;
+        }
+        Py_INCREF(tpl);
+        self->pdelays = tpl;
+    } else {
+        self->pdelays       =   PyTuple_New(0);
+        self->_vpi_delay.no_of_delays  =   0;
+    }
+#ifdef PYVPI_DEBUG
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Delay is Initial.\n");
+#endif
+    return 0;
+}
+
+PyObject * pyvpi_delays_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{   
+    p_pyvpi_delays self = (p_pyvpi_delays)type->tp_alloc(type, 0);
+    self->_vpi_delay.da = NULL;
+#ifdef PYVPI_DEBUG
+    vpi_printf("[PYVPI_DEBUG] pyvpi._Delay is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
+#endif
+    return (PyObject *) self;
+}
+
+//Get/Set Functions ......
+PyObject * s_pyvpi_delays_getdelays(s_pyvpi_delays *self, void *closure){
+    Py_INCREF(self->pdelays);
+    return self->pdelays;
+}
+int        s_pyvpi_delays_setdelays(s_pyvpi_delays *self, PyObject *value, void *closure){
+    PyObject * tmp;
+    int i;
+    if (value == NULL || !PyTuple_Check(value)) {
+        PyErr_SetString(PyExc_TypeError, "Can't set delays to NULL/Non-Tuple.");
+        return -1;
+    }
+    
+    for(i = 0; i < PyTuple_Size(value); i++) {
+        if(!PyObject_TypeCheck(PyTuple_GetItem(value,i) ,&pyvpi_time_Type)){
+                PyErr_Format(PyExc_TypeError,  "Error delays in %d, all items in delays must be pyvpi._Time.", i);
+                return -1;
+        }
+    }
+    
+    if(self->_vpi_delay.da != NULL) 
+        free(self->_vpi_delay.da);
+    self->_vpi_delay.da = NULL;
+    
+    Py_INCREF(value);
+    Py_DECREF(self->pdelays);
+    if(PyTuple_Size(value)) {
+        self->_vpi_delay.da = (p_vpi_time) malloc(self->_vpi_delay.no_of_delays * sizeof(s_vpi_time));
+        for(i=0; i< PyTuple_Size(value); i++){
+            p_pyvpi_time pv = (p_pyvpi_time) PyTuple_GetItem(value,i);
+            self->_vpi_delay.da[i] = pv->_vpi_time;
+        }
+        self->pdelays       =   value;
+        self->_vpi_delay.no_of_delays = PyTuple_Size(value);
+    }
+    else {
+        self->pdelays       =   value;
+        self->_vpi_delay.no_of_delays  =   0;    
+    }
+}

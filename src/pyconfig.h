@@ -18,5 +18,5 @@ extern PyTypeObject pyvpi_time_Type;
 extern PyTypeObject pyvpi_strengthval_Type;
 extern PyTypeObject pyvpi_vector_Type;
 extern PyTypeObject pyvpi_handle_Type;
-
+extern PyTypeObject pyvpi_delays_Type;
 #endif
