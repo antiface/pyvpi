@@ -25,6 +25,7 @@ typedef struct t_pyvpi_cbdata
     PyObject_HEAD
     s_cb_data  _vpi_cbdata;         //Struct vpi_cbdata.
     PyObject *callback;             //Callback object
+    PyObject *obj_h;                //Object handle
     vpiHandle cb_h;                 //The register callback handle.
 } s_pyvpi_cbdata, *p_pyvpi_cbdata;
 

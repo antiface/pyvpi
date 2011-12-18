@@ -50,7 +50,9 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
     pvalue = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
     Py_DECREF(pvalue);
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
-    Py_DECREF(ptime);
+    Py_DECREF(ptime);    
+    Py_DECREF(self->cb_h);
+    Py_DECREF(self->obj_h);
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is release,ptr is 0x%x.\n",self);
 #endif
@@ -65,13 +67,25 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
  */
 int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};    
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|il", kwlist,
+    static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};
+    p_pyvpi_handle        obj_h = (p_pyvpi_handle) Py_None;
+    Py_INCREF(obj_h);
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist,
                                       &self->_vpi_cbdata.reason,
-                                      &self->_vpi_cbdata.obj))
+                                      &obj_h))
         return -1;
+    
+    Py_INCREF(obj_h);
+    Py_DECREF(self->obj_h);    
+    self->obj_h = (PyObject *)obj_h;
+    if(obj_h != Py_None) 
+        self->_vpi_cbdata.obj = obj_h->_vpi_handle;
+    
     self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn.
-    self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.        
+    self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.
+#ifdef PYVPI_DEBUG
+    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is Initial\n");
+#endif    
     return 0;
 }
 
@@ -104,8 +118,13 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
     self->_vpi_cbdata.time = &ptime->_vpi_time;
+    
+    Py_INCREF(Py_None);
+    self->obj_h = Py_None;
+    Py_INCREF(Py_None);
+    self->cb_h = Py_None;
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi_cbdata is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
+    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is allocate,ptr is <0x%x>, type ptr is <0x%x>.\n",self,type);
 #endif
     return (PyObject *) self;
 }
@@ -134,25 +153,28 @@ int        s_pyvpi_cbdata_setreason(s_pyvpi_cbdata *self, PyObject *value, void 
 //trigger object
 PyObject * s_pyvpi_cbdata_gettrgobj(s_pyvpi_cbdata *self, void *closure)
 {
-#ifdef __LP64__
-    return Py_BuildValue("k", self->_vpi_cbdata.obj);
-#else
-    return Py_BuildValue("I", self->_vpi_cbdata.obj);
-#endif
+    Py_INCREF(self->obj_h);
+    return self->obj_h;
 }
 
 int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
+    p_pyvpi_handle  handle;
     if (value == NULL) {
         PyErr_SetString(PyExc_TypeError, "Can't set trigger object to NULL.");
         return -1;
     }
-    if (!(PyLong_Check(value)||PyInt_Check(value))) {
+    if (!(PyObject_TypeCheck(value,&pyvpi_handle_Type))) {
         PyErr_SetString(PyExc_TypeError,
-                        "The reason trigger object be a long/int.");
+                        "The reason trigger object be a pyvpi._vpiHandle.");
         return -1;
     }
-    self->_vpi_cbdata.obj = (vpiHandle)PyLong_AsLong(value);
+    
+    handle = (p_pyvpi_handle) value;
+    Py_INCREF(handle);
+    Py_DECREF(self->obj_h);
+    self->obj_h =   (PyObject *)handle;
+    self->_vpi_cbdata.obj = handle->_vpi_handle;
     return 0;
 }
 
