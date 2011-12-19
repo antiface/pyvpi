@@ -20,6 +20,8 @@ extern void pyvpi_handle_Dealloc(p_pyvpi_handle self);
 extern int  pyvpi_handle_Init(s_pyvpi_handle *self, PyObject *args, PyObject *kwds);
 extern PyObject * pyvpi_handle_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
+extern PyObject * _pyvpi_handle_New(vpiHandle handle);
+
 static PyMethodDef  pyvpi_handle_methods[] = {
     {NULL}
 };

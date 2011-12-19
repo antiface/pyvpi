@@ -7,7 +7,6 @@
 //else if python error, PyError will be set.
 static PyObject *VpiError;
 static PyObject *PyError;
-
 /*****************************************************************************
  * pyvpi_CheckError()
  * Checks if an error was reported by the last vpi function called
@@ -44,8 +43,7 @@ int pyvpi_CheckError( void )
      ans = vpi_handle_by_name(name,scope->_vpi_handle);
      if(pyvpi_CheckError())
         return NULL;
-     oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-     oans->_vpi_handle = ans;
+     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
      return (PyObject *)oans;
  }
 /* 
@@ -65,8 +63,7 @@ int pyvpi_CheckError( void )
      ans = vpi_handle_by_index(object->_vpi_handle,indx);
      if(pyvpi_CheckError())
         return NULL;
-     oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-     oans->_vpi_handle = ans;
+     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
      return (PyObject *)oans;  
  }
 
@@ -88,8 +85,7 @@ int pyvpi_CheckError( void )
      ans = vpi_handle(type,refHandle->_vpi_handle);
      if(pyvpi_CheckError())
         return NULL;
-     oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-     oans->_vpi_handle = ans;
+     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
      return (PyObject *)oans;   
  }
 /*
@@ -116,8 +112,7 @@ int pyvpi_CheckError( void )
      ans = vpi_iterate(type,refHandle->_vpi_handle);
      if(pyvpi_CheckError())
         return NULL;
-     oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-     oans->_vpi_handle = ans;
+     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
      return (PyObject *)oans;   
  }
 /* 
@@ -136,8 +131,7 @@ int pyvpi_CheckError( void )
      if(pyvpi_CheckError())
         return NULL;
      if(ans != NULL) {
-        oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-        oans->_vpi_handle = ans;
+        oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
      }
      else {
         Py_INCREF(Py_None);
@@ -224,8 +218,7 @@ int pyvpi_CheckError( void )
      cbdata->cb_h = ans;     
      if(pyvpi_CheckError())
         return NULL;
-     oans = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-     oans->_vpi_handle = ans;
+     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
      return (PyObject *)oans;   
  }
  
@@ -249,21 +242,24 @@ int pyvpi_CheckError( void )
      p_pyvpi_handle  object,trgobj;
      p_pyvpi_cbdata  cbdata;
      PyObject*       pdict = PyDict_New();
+     PyObject*       ptpl = PyTuple_New(0);
      if (!PyArg_ParseTuple(args, "O", &object))
      {
          PyErr_SetString(PyExc_TypeError,  "Error args, must be (pyvpi._vpiHandle).");
          return NULL;
      }
      //Initial cbdata;
-    cbdata = (p_pyvpi_cbdata) pyvpi_cbdata_New(&pyvpi_cbdata_Type,PyTuple_New(0),PyDict_New());
+    cbdata = (p_pyvpi_cbdata) pyvpi_cbdata_New(&pyvpi_cbdata_Type,ptpl,pdict);
     cbdata->cb_h = object->_vpi_handle;
     vpi_get_cb_info(object->_vpi_handle,&cbdata->_vpi_cbdata);
     // Add trgobj info.    
-    trgobj = (p_pyvpi_handle) pyvpi_handle_New(&pyvpi_handle_Type,PyTuple_New(0),PyDict_New());
-    trgobj -> _vpi_handle = cbdata->_vpi_cbdata.obj; //TBD , this handle will be refer two times, may case double free???
+    trgobj = (p_pyvpi_handle) _pyvpi_handle_New(cbdata->_vpi_cbdata.obj);
     //Initial cbData...
-    PyDict_SetItem(pdict,PyString_FromString("trgobj"),(PyObject*) trgobj);
-    pyvpi_cbdata_Init(cbdata,PyTuple_New(0),pdict);
+    PyDict_SetItemString(pdict,"trgobj",(PyObject*) trgobj);
+    Py_DECREF(trgobj);
+    pyvpi_cbdata_Init(cbdata,ptpl,pdict);    
+    Py_DECREF(ptpl);
+    Py_DECREF(pdict);
     if(pyvpi_CheckError())
        return NULL;
     return (PyObject*) cbdata;
