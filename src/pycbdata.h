@@ -26,7 +26,6 @@ typedef struct t_pyvpi_cbdata
     s_cb_data  _vpi_cbdata;         //Struct vpi_cbdata.
     PyObject *callback;             //Callback object
     PyObject *obj_h;                //Object handle
-    vpiHandle cb_h;                 //The register callback handle.
 } s_pyvpi_cbdata, *p_pyvpi_cbdata;
 
 //Method ...
@@ -63,7 +62,6 @@ static PyMethodDef  pyvpi_cbdata_methods[] = {
     {NULL}
 };
 static PyMemberDef pyvpi_cbdata_members[]  = {
-    {"cb_h", T_ULONG, offsetof(s_pyvpi_cbdata, cb_h), READONLY, "callback handle" },
     {NULL}
 };
 static PyGetSetDef pyvpi_cbdata_getsets[]  = {

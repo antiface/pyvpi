@@ -51,7 +51,6 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
     Py_DECREF(pvalue);
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
     Py_DECREF(ptime);    
-    Py_DECREF(self->cb_h);
     Py_DECREF(self->obj_h);
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is release,ptr is <0x%lx>.\n",self);
@@ -124,8 +123,6 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     
     Py_INCREF(Py_None);
     self->obj_h = Py_None;
-    Py_INCREF(Py_None);
-    self->cb_h = Py_None;
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
 #endif

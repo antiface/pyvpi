@@ -7,6 +7,9 @@
 //else if python error, PyError will be set.
 static PyObject *VpiError;
 static PyObject *PyError;
+
+static PyObject *SysTfDict;         //This is a dict used to store all system task and function in register.
+static PyObject *CallbackDict;      //This is a dict used to store all register callback function.
 /*****************************************************************************
  * pyvpi_CheckError()
  * Checks if an error was reported by the last vpi function called
@@ -204,7 +207,7 @@ int pyvpi_CheckError( void )
     vpiHandle  vpi_register_systf  (p_vpi_systf_data   systf_data_p);
     void       vpi_get_systf_info  (vpiHandle object, p_vpi_systf_data   systf_data_p);
  */
-  static PyObject* pyvpi_RegisterCb(PyObject *self, PyObject *args) //TBD cbData will store cb_h,maybe need update 
+  static PyObject* pyvpi_RegisterCb(PyObject *self, PyObject *args) 
  {                                                                  //the args of vpi_remove_cb and vpi_get_cb_info.
      s_pyvpi_cbdata*  cbdata;
      vpiHandle  ans;
@@ -215,7 +218,6 @@ int pyvpi_CheckError( void )
          return NULL;
      }
      ans = vpi_register_cb(&cbdata->_vpi_cbdata);
-     cbdata->cb_h = ans;     
      if(pyvpi_CheckError())
         return NULL;
      oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -250,7 +252,6 @@ int pyvpi_CheckError( void )
      }
      //Initial cbdata;
     cbdata = (p_pyvpi_cbdata) pyvpi_cbdata_New(&pyvpi_cbdata_Type,ptpl,pdict);
-    cbdata->cb_h = object->_vpi_handle;
     vpi_get_cb_info(object->_vpi_handle,&cbdata->_vpi_cbdata);
     // Add trgobj info.    
     trgobj = (p_pyvpi_handle) _pyvpi_handle_New(cbdata->_vpi_cbdata.obj);

@@ -66,7 +66,6 @@ void pyvpi_handle_Dealloc(p_pyvpi_handle self)
         _tmp_h = PyDict_GetItem(_HandleDict,key);        
         if(_tmp_h != NULL){
             cnt = PyInt_AsLong(_tmp_h) - 1;            
-            vpi_printf("handle cnt is %d->%d.\n",PyInt_AsLong(_tmp_h),cnt);            
             if(cnt == 0) { 
                 PyDict_DelItem(_HandleDict,key);
 #ifdef PYVPI_DEBUG
@@ -142,3 +141,4 @@ PyObject *_pyvpi_handle_New(vpiHandle handle){
         Py_DECREF(key);
         return (PyObject *) self;
 }
+
