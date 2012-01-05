@@ -60,6 +60,36 @@ static PyMemberDef pyvpi_systfdata_members[]  = {
     {NULL}
 };
 static PyGetSetDef pyvpi_systfdata_getsets[]  = {
+    {   "type", 
+        (getter)s_pyvpi_systfdata_gettype,             
+        (setter)s_pyvpi_systfdata_settype,
+        "get/set function/task type.",
+        NULL},
+    {   "systftype", 
+        (getter)s_pyvpi_systfdata_getsystftype, 
+        (setter)s_pyvpi_systfdata_setsystftype,
+        "get/set function/task return type.",
+        NULL},
+    {   "tfname", 
+        (getter)s_pyvpi_systfdata_gettfname, 
+        (setter)s_pyvpi_systfdata_settfname,
+        "get/set function/task name(start with $).",
+        NULL},
+    {   "calltf", 
+        (getter)s_pyvpi_systfdata_getcalltf, 
+        (setter)s_pyvpi_systfdata_setcalltf,
+        "get/set call function/task.",
+        NULL},
+    {   "compiletf", 
+        (getter)s_pyvpi_systfdata_getcompiletf, 
+        (setter)s_pyvpi_systfdata_setcompiletf,
+        "get/set  compile function/task.",
+        NULL},
+    {   "sizetf", 
+        (getter)s_pyvpi_systfdata_getsizetf, 
+        (setter)s_pyvpi_systfdata_setsizetf,
+        "get/set  compile function/task.",
+        NULL},
     {NULL}
 };
 #endif

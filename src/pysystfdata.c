@@ -197,46 +197,108 @@ int        s_pyvpi_systfdata_settype(s_pyvpi_value *self, PyObject *value, void 
     self->_vpi_systfdata.type = tmp;
     return 0;
 }
+
 PyObject * s_pyvpi_systfdata_getsystftype(s_pyvpi_value *self, void *closure)
 {
     //Get SysTask/Func return type.
+     return Py_BuildValue("i",self->_vpi_systfdata.systftype);
 }
 int        s_pyvpi_systfdata_setsystftype(s_pyvpi_value *self, PyObject *value, void *closure)
 {
     //Set SysTask/Func return type.
+    //Check type, it must be vpiSysTask,vpiSysFunc.
+    int tmp;
+    if(!PyInt_Check(value)){
+        PyErr_SetString(PyExc_TypeError,
+                        "The value must be vpiSysTask, vpi[Int,Real,Time,Sized,SizedSigned]Func.");
+        return -1;
+    }
+    tmp = PyInt_AS_LONG(value);
+    if(self->_vpi_systfdata.type == vpiSysTask){
+        //Task
+        if(tmp != vpiSysTask){
+            PyErr_SetString(PyExc_TypeError,
+                            "The value must be vpiSysTask when type is vpiSysTask.");
+            return -1;
+        }
+    }
+    else {
+        //Function return...
+        if( tmp == vpiIntFunc   ||
+            tmp == vpiRealFunc  ||
+            tmp == vpiTimeFunc  ||
+            tmp == vpiSizedFunc ||
+            tmp == vpiSizedSignedFunc )
+        {
+            //dummy code here...
+        }
+        else {
+            PyErr_SetString(PyExc_TypeError,
+                            "The value must be vpi[Int,Real,Time,Sized,SizedSigned]Func when type is vpiSysFunc.");
+            return -1;
+        }
+    }
+    self->_vpi_systfdata.systftype = tmp;
+    return 0;    
 }    
+
 PyObject * s_pyvpi_systfdata_gettfname(s_pyvpi_value *self, void *closure)
 {
-
+    Py_INCREF(self->tfname);
+    return self->tfname;
 }
 int        s_pyvpi_systfdata_settfname(s_pyvpi_value *self, PyObject *value, void *closure)
 {
+    char * name;
+    if(self->tfname == NULL){
+        PyErr_SetString(PyExc_TypeError, "Can't set tfname to None.");
+        return -1;
+    }
 
+    name = PyString_AsString(self->tfname);
+    if(strlen(name)<2) {
+        PyErr_SetString(PyExc_TypeError, "The tfname len must big than 1.");
+        return -1;
+    }
+    if(name[0] != "$") {
+        PyErr_SetString(PyExc_TypeError, "The tfname must start with $");
+        return -1;
+    }
+    Py_INCREF(value);
+    self->_vpi_systfdata.tfname = name; 
+    Py_XDECREF(self->tfname);
+    self->tfname = value;
+    return 0;
 }
+
 PyObject * s_pyvpi_systfdata_getcalltf(s_pyvpi_value *self, void *closure)
 {
-
+    Py_INCREF(self->calltf);
+    return self->calltf;
 }
 int        s_pyvpi_systfdata_setcalltf(s_pyvpi_value *self, PyObject *value, void *closure)
 {
 
 }
+
 PyObject * s_pyvpi_systfdata_getcompiletf(s_pyvpi_value *self, void *closure)
 {
-
+    Py_INCREF(self->compiletf);
+    return self->compiletf;
 }
+
 int        s_pyvpi_systfdata_setcompiletf(s_pyvpi_value *self, PyObject *value, void *closure)
 {
-
 }
+
 PyObject * s_pyvpi_systfdata_getsizetf(s_pyvpi_value *self, void *closure)
 {
-
+    Py_INCREF(self->sizetf);
+    return self->sizetf;
 }
 
 int        s_pyvpi_systfdata_setsizetf(s_pyvpi_value *self, PyObject *value, void *closure)
 {
-
 }
 
 PLI_INT32 _calltf(PLI_BYTE8 *self)
