@@ -76,13 +76,17 @@ void pyvpi_systfdata_Dealloc(p_pyvpi_systfdata self)
 
 int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"type"，"sysfunctype","tfname","calltf","compiletf","sizetf", NULL};
+    static char *kwlist[] = {"type","sysfunctype","tfname","calltf","compiletf","sizetf", NULL};
     self->tfname    =   NULL;
     self->calltf    =   NULL;
     self->compiletf =   NULL;
     self->sizetf    =   NULL;
     self->_vpi_systfdata.type           = vpiSysTask; //Default value.
     self->_vpi_systfdata.sysfunctype    = vpiSysTask; //Default value.
+    self->_vpi_systfdata.user_data      = (void *)self;
+    self->_vpi_systfdata.calltf         = _calltf;
+    self->_vpi_systfdata.compiletf      = _compiletf;
+    self->_vpi_systfdata.sizetf         = _sizetf;
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iiOOOO", kwlist,                                      
                                       &self->_vpi_systfdata.type,
                                       &self->_vpi_systfdata.sysfunctype,
@@ -101,7 +105,11 @@ int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwd
         }
     }
     else if(self->_vpi_systfdata.sysfunctype == vpiSysFunc){
-        if(self->_vpi_systfdata.sysfunctype != vpiSysTask) {
+        if( self->_vpi_systfdata.sysfunctype != vpiIntFunc   &&
+            self->_vpi_systfdata.sysfunctype != vpiRealFunc  &&
+            self->_vpi_systfdata.sysfunctype != vpiTimeFunc  &&
+            self->_vpi_systfdata.sysfunctype != vpiSizedFunc &&
+            self->_vpi_systfdata.sysfunctype != vpiSizedSignedFunc ) {
             PyErr_SetString(PyExc_TypeError, "Can't set sysfunctype to other values "
                     "except vpi[Int,Real,Time,Sized,SizedSigned]Func for vpiSysFunc.");
             return -1;
@@ -111,54 +119,29 @@ int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwd
         PyErr_SetString(PyExc_TypeError, "Can't set type to other values except vpiSysTask,vpiSysFunc.");
         return -1;
     }
+
+
     //Check tfname
-    if(self->tfname == NULL){
-        PyErr_SetString(PyExc_TypeError, "Can't set tfname to None.");
-        return -1;
-    } else {
-        Py_INCREF(self->tfname);
-        self->_vpi_systfdata.tfname = PyString_AsString(self->tfname);
+    if(self->tfname != NULL){
+        if(s_pyvpi_systfdata_settfname(self,self->tfname,NULL) == -1)
+            return -1;
     }
-    self->_vpi_systfdata.user_data = self;
+
     //Check calltf
-    if(self->calltf == NULL){
-        PyErr_SetString(PyExc_TypeError, "Can't set calltf to None.");
-        return -1;
-    } 
-    else {
-        if (!PyCallable_Check(value)) {
-            PyErr_SetString(PyExc_TypeError, "calltf must be a callable.");
+    if(self->calltf != NULL){
+        if(s_pyvpi_systfdata_setcalltf(self,self->calltf,NULL) == -1) 
             return -1;
-        }
-        Py_INCREF(self->calltf);
-        self->_vpi_systfdata.calltf = _calltf;
-    }
+    } 
     //Check compiletf
-    if(self->compiletf == NULL){
-        Py_INCREF(Py_None);
-        self->compiletf = Py_None;
-    } 
-    else {
-        if (!PyCallable_Check(value)) {
-            PyErr_SetString(PyExc_TypeError, "compiletf must be a callable.");
+    if(self->compiletf != NULL){
+        if(s_pyvpi_systfdata_setcompiletf(self,self->compiletf,NULL) == -1) 
             return -1;
-        }
-        Py_INCREF(self->compiletf);
-        self->_vpi_systfdata.compiletf = _compiletf;
-    }
+    } 
     //Check sizetf
-    if(self->sizetf == NULL){
-        Py_INCREF(Py_None);
-        self->sizetf = Py_None;
-    } 
-    else {
-        if (!PyCallable_Check(value)) {
-            PyErr_SetString(PyExc_TypeError, "sizetf must be a callable.");
+    if(self->sizetf != NULL){
+        if(s_pyvpi_systfdata_setsizetf(self,self->sizetf,NULL) == -1) 
             return -1;
-        }
-        PyINCREF(self->sizetf);
-        self->_vpi_systfdata.sizetf = _sizetf;
-    }
+    } 
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._SysTfData is Initial,type is <0x%lx>.\n",self->_vpi_systfdata.type);
 #endif
@@ -174,11 +157,11 @@ PyObject * pyvpi_systfdata_New(PyTypeObject *type, PyObject *args, PyObject *kwd
     return (PyObject *) self;
 }
 
-PyObject * s_pyvpi_systfdata_gettype(s_pyvpi_value *self, void *closure)
+PyObject * s_pyvpi_systfdata_gettype(s_pyvpi_systfdata *self, void *closure)
 {
     return Py_BuildValue("i",self->_vpi_systfdata.type);
 }
-int        s_pyvpi_systfdata_settype(s_pyvpi_value *self, PyObject *value, void *closure)
+int        s_pyvpi_systfdata_settype(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
     //Check type, it must be vpiSysTask,vpiSysFunc.
     int tmp;
@@ -198,12 +181,12 @@ int        s_pyvpi_systfdata_settype(s_pyvpi_value *self, PyObject *value, void 
     return 0;
 }
 
-PyObject * s_pyvpi_systfdata_getsystftype(s_pyvpi_value *self, void *closure)
+PyObject * s_pyvpi_systfdata_getsysfunctype(s_pyvpi_systfdata *self, void *closure)
 {
     //Get SysTask/Func return type.
-     return Py_BuildValue("i",self->_vpi_systfdata.systftype);
+     return Py_BuildValue("i",self->_vpi_systfdata.sysfunctype);
 }
-int        s_pyvpi_systfdata_setsystftype(s_pyvpi_value *self, PyObject *value, void *closure)
+int        s_pyvpi_systfdata_setsysfunctype(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
     //Set SysTask/Func return type.
     //Check type, it must be vpiSysTask,vpiSysFunc.
@@ -238,29 +221,29 @@ int        s_pyvpi_systfdata_setsystftype(s_pyvpi_value *self, PyObject *value, 
             return -1;
         }
     }
-    self->_vpi_systfdata.systftype = tmp;
+    self->_vpi_systfdata.sysfunctype = tmp;
     return 0;    
 }    
 
-PyObject * s_pyvpi_systfdata_gettfname(s_pyvpi_value *self, void *closure)
+PyObject * s_pyvpi_systfdata_gettfname(s_pyvpi_systfdata *self, void *closure)
 {
     Py_INCREF(self->tfname);
     return self->tfname;
 }
-int        s_pyvpi_systfdata_settfname(s_pyvpi_value *self, PyObject *value, void *closure)
+int        s_pyvpi_systfdata_settfname(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
     char * name;
-    if(self->tfname == NULL){
+    if(value == NULL){
         PyErr_SetString(PyExc_TypeError, "Can't set tfname to None.");
         return -1;
     }
 
-    name = PyString_AsString(self->tfname);
+    name = PyString_AsString(value);
     if(strlen(name)<2) {
         PyErr_SetString(PyExc_TypeError, "The tfname len must big than 1.");
         return -1;
     }
-    if(name[0] != "$") {
+    if(name[0] != '$') {
         PyErr_SetString(PyExc_TypeError, "The tfname must start with $");
         return -1;
     }
@@ -271,44 +254,81 @@ int        s_pyvpi_systfdata_settfname(s_pyvpi_value *self, PyObject *value, voi
     return 0;
 }
 
-PyObject * s_pyvpi_systfdata_getcalltf(s_pyvpi_value *self, void *closure)
+PyObject * s_pyvpi_systfdata_getcalltf(s_pyvpi_systfdata *self, void *closure)
 {
     Py_INCREF(self->calltf);
     return self->calltf;
 }
-int        s_pyvpi_systfdata_setcalltf(s_pyvpi_value *self, PyObject *value, void *closure)
+int        s_pyvpi_systfdata_setcalltf(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
-
+    if(value == NULL){
+        PyErr_SetString(PyExc_TypeError, "Can't set calltf to None.");
+        return -1;
+    }
+    if (!PyCallable_Check(value)) {
+        PyErr_SetString(PyExc_TypeError, "calltf must be a callable.");
+        return -1;
+    }
+    Py_INCREF(value);    
+    Py_XDECREF(self->calltf);
+    self->calltf = value;
+    return 0; 
 }
 
-PyObject * s_pyvpi_systfdata_getcompiletf(s_pyvpi_value *self, void *closure)
+PyObject * s_pyvpi_systfdata_getcompiletf(s_pyvpi_systfdata *self, void *closure)
 {
     Py_INCREF(self->compiletf);
     return self->compiletf;
 }
 
-int        s_pyvpi_systfdata_setcompiletf(s_pyvpi_value *self, PyObject *value, void *closure)
+int        s_pyvpi_systfdata_setcompiletf(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
+    if(value == NULL){
+        PyErr_SetString(PyExc_TypeError, "Can't set compiletf to None.");
+        return -1;
+    }
+    if (!PyCallable_Check(value)) {
+        PyErr_SetString(PyExc_TypeError, "calltf must be a callable.");
+        return -1;
+    }
+    Py_INCREF(value);    
+    Py_XDECREF(self->compiletf);
+    self->compiletf = value;
+    return 0;     
 }
 
-PyObject * s_pyvpi_systfdata_getsizetf(s_pyvpi_value *self, void *closure)
+PyObject * s_pyvpi_systfdata_getsizetf(s_pyvpi_systfdata *self, void *closure)
 {
     Py_INCREF(self->sizetf);
     return self->sizetf;
 }
 
-int        s_pyvpi_systfdata_setsizetf(s_pyvpi_value *self, PyObject *value, void *closure)
+int        s_pyvpi_systfdata_setsizetf(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
+    if(value == NULL){
+        PyErr_SetString(PyExc_TypeError, "Can't set sizetf to None.");
+        return -1;
+    }
+    if (!PyCallable_Check(value)) {
+        PyErr_SetString(PyExc_TypeError, "calltf must be a callable.");
+        return -1;
+    }
+    Py_INCREF(value);    
+    Py_XDECREF(self->sizetf);
+    self->sizetf = value;
+    return 0;     
 }
 
 PLI_INT32 _calltf(PLI_BYTE8 *self)
 {
     p_pyvpi_systfdata _self = (p_pyvpi_systfdata) self;
+    PyObject * arglist = Py_BuildValue("(O)",_self);
     PyObject * ans;
-    arglist = Py_BuildValue("(O)",_self);
-    ans = PyObject_CallObject(self->calltf, arglist);
+    if (!PyCallable_Check(_self->calltf)) 
+        return 0;
+    ans = PyObject_CallObject(_self->calltf, arglist);
     Py_DECREF(arglist);
-    if(ans == NULLL) 
+    if(ans == NULL) 
         return 0;
     if(PyInt_Check(ans)){
         return PyInt_AsLong(ans);
@@ -323,11 +343,13 @@ PLI_INT32 _calltf(PLI_BYTE8 *self)
 PLI_INT32 _compiletf(PLI_BYTE8 *self)
 {
     p_pyvpi_systfdata _self = (p_pyvpi_systfdata) self;
+    PyObject * arglist = Py_BuildValue("(O)",_self);
     PyObject * ans;
-    arglist = Py_BuildValue("(O)",_self);
-    ans = PyObject_CallObject(self->compiletf, arglist);
+    if (!PyCallable_Check(_self->compiletf)) 
+        return 0;
+    ans = PyObject_CallObject(_self->compiletf, arglist);
     Py_DECREF(arglist);
-    if(ans == NULLL) 
+    if(ans == NULL) 
         return 0;
     if(PyInt_Check(ans)){
         return PyInt_AsLong(ans);
@@ -342,11 +364,13 @@ PLI_INT32 _compiletf(PLI_BYTE8 *self)
 PLI_INT32 _sizetf(PLI_BYTE8 *self)
 {
     p_pyvpi_systfdata _self = (p_pyvpi_systfdata) self;
+    PyObject * arglist = Py_BuildValue("(O)",_self);
     PyObject * ans;
-    arglist = Py_BuildValue("(O)",_self);
-    ans = PyObject_CallObject(self->sizetf, arglist);
+    if (!PyCallable_Check(_self->sizetf)) 
+        return 0;
+    ans = PyObject_CallObject(_self->sizetf, arglist);
     Py_DECREF(arglist);
-    if(ans == NULLL) 
+    if(ans == NULL) 
         return 0;
     if(PyInt_Check(ans)){
         return PyInt_AsLong(ans);

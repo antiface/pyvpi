@@ -65,7 +65,7 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
                                       &self->_vpi_value.format))
         return -1;
-    Py_DECREF(self->obj);
+    Py_DECREF(self->obj);       //For inital, we need no object...
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._Value is Initial,format is <0x%lx>.\n",self->_vpi_value.format);
 #endif

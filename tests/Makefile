@@ -13,8 +13,9 @@ SRC_C         = ../src/pyvpi.c \
                 ../src/pyvector.c   \
                 ../src/pyhandle.c   \
                 ../src/pycbdata.c   \
-                ../src/pydelays.c
-                
+                ../src/pydelays.c	\
+				../src/pysystfdata.c
+
 SRC_O         = pyvpi.o \
                 pyvalue.o \
                 pycbdata.o \
@@ -22,7 +23,8 @@ SRC_O         = pyvpi.o \
                 pystrength.o \
                 pyvector.o  \
                 pyhandle.o  \
-                pydelays.o
+                pydelays.o	\
+				pysystfdata.o
 
 all : clean comp vpi run
 

@@ -40,18 +40,18 @@ PLI_INT32 _calltf(PLI_BYTE8 *self);
 PLI_INT32 _compiletf(PLI_BYTE8 *self);
 PLI_INT32 _sizetf(PLI_BYTE8 *self);
 
-PyObject * s_pyvpi_systfdata_gettype(s_pyvpi_value *self, void *closure);
-int        s_pyvpi_systfdata_settype(s_pyvpi_value *self, PyObject *value, void *closure);
-PyObject * s_pyvpi_systfdata_getsystftype(s_pyvpi_value *self, void *closure);
-int        s_pyvpi_systfdata_setsystftype(s_pyvpi_value *self, PyObject *value, void *closure);
-PyObject * s_pyvpi_systfdata_gettfname(s_pyvpi_value *self, void *closure);
-int        s_pyvpi_systfdata_settfname(s_pyvpi_value *self, PyObject *value, void *closure);
-PyObject * s_pyvpi_systfdata_getcalltf(s_pyvpi_value *self, void *closure);
-int        s_pyvpi_systfdata_setcalltf(s_pyvpi_value *self, PyObject *value, void *closure);
-PyObject * s_pyvpi_systfdata_getcompiletf(s_pyvpi_value *self, void *closure);
-int        s_pyvpi_systfdata_setcompiletf(s_pyvpi_value *self, PyObject *value, void *closure);
-PyObject * s_pyvpi_systfdata_getsizetf(s_pyvpi_value *self, void *closure);
-int        s_pyvpi_systfdata_setsizetf(s_pyvpi_value *self, PyObject *value, void *closure);
+PyObject * s_pyvpi_systfdata_gettype(s_pyvpi_systfdata *self, void *closure);
+int        s_pyvpi_systfdata_settype(s_pyvpi_systfdata *self, PyObject *value, void *closure);
+PyObject * s_pyvpi_systfdata_getsysfunctype(s_pyvpi_systfdata *self, void *closure);
+int        s_pyvpi_systfdata_setsysfunctype(s_pyvpi_systfdata *self, PyObject *value, void *closure);
+PyObject * s_pyvpi_systfdata_gettfname(s_pyvpi_systfdata *self, void *closure);
+int        s_pyvpi_systfdata_settfname(s_pyvpi_systfdata *self, PyObject *value, void *closure);
+PyObject * s_pyvpi_systfdata_getcalltf(s_pyvpi_systfdata *self, void *closure);
+int        s_pyvpi_systfdata_setcalltf(s_pyvpi_systfdata *self, PyObject *value, void *closure);
+PyObject * s_pyvpi_systfdata_getcompiletf(s_pyvpi_systfdata *self, void *closure);
+int        s_pyvpi_systfdata_setcompiletf(s_pyvpi_systfdata *self, PyObject *value, void *closure);
+PyObject * s_pyvpi_systfdata_getsizetf(s_pyvpi_systfdata *self, void *closure);
+int        s_pyvpi_systfdata_setsizetf(s_pyvpi_systfdata *self, PyObject *value, void *closure);
 
 static PyMethodDef  pyvpi_systfdata_methods[] = {
     {NULL}
@@ -65,9 +65,9 @@ static PyGetSetDef pyvpi_systfdata_getsets[]  = {
         (setter)s_pyvpi_systfdata_settype,
         "get/set function/task type.",
         NULL},
-    {   "systftype", 
-        (getter)s_pyvpi_systfdata_getsystftype, 
-        (setter)s_pyvpi_systfdata_setsystftype,
+    {   "sysfunctype", 
+        (getter)s_pyvpi_systfdata_getsysfunctype, 
+        (setter)s_pyvpi_systfdata_setsysfunctype,
         "get/set function/task return type.",
         NULL},
     {   "tfname", 
