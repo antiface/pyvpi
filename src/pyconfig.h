@@ -9,6 +9,7 @@
 #include "pyhandle.h"
 #include "pyvalue.h"
 #include "pycbdata.h"
+#include "pysystfdata.h"
 
 #include "pyvpi.h"
 
@@ -19,4 +20,5 @@ extern PyTypeObject pyvpi_strengthval_Type;
 extern PyTypeObject pyvpi_vector_Type;
 extern PyTypeObject pyvpi_handle_Type;
 extern PyTypeObject pyvpi_delays_Type;
+extern PyTypeObject pyvpi_systfdata_Type;
 #endif

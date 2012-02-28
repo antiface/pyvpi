@@ -1,9 +1,9 @@
-export PYTHONPATH = .:../src
+export PYTHONPATH += .:../src
 
 
 INC_PATH      = -I$(MTI_HOME)/include
-INC_PATH     += -I$(PY_HOME)/include/python2.7
-LIB_PATH      = -L$(PY_HOME)/lib
+INC_PATH     += -I/usr/include/python2.7
+LIB_PATH      = -L/usr/lib
 LIB_REF       = -lpython2.7 -lm -ldl -lutil
 CFLAGS        = -c -g $(INC_PATH) -fPIC
 SRC_C         = ../src/pyvpi.c \

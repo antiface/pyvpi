@@ -64,10 +64,10 @@ PyTypeObject pyvpi_systfdata_Type = {
 void pyvpi_systfdata_Dealloc(p_pyvpi_systfdata self)
 {
     //Free self.
-    Py_DECREF(self->tfname);
-    Py_DECREF(self->calltf);
-    Py_DECREF(self->compiletf);
-    Py_DECREF(self->tfname);
+    Py_XDECREF(self->tfname);
+    Py_XDECREF(self->calltf);
+    Py_XDECREF(self->compiletf);
+    Py_XDECREF(self->sizetf);
 #ifdef PYVPI_DEBUG
     vpi_printf("[PYVPI_DEBUG] pyvpi._SysTfData is release,ptr is <0x%lx>.\n",self);
 #endif
@@ -330,7 +330,7 @@ PLI_INT32 _calltf(PLI_BYTE8 *self)
     Py_DECREF(arglist);
     if(ans == NULL) 
         return 0;
-    if(PyInt_Check(ans)){
+    if(PyInt_Check(ans)){   //work with int,size,sizesigned function type.
         return PyInt_AsLong(ans);
     }
     if(PyFloat_Check(ans)){
