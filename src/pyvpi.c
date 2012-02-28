@@ -375,6 +375,9 @@ static PyMethodDef pyvpi_Methods[] = {
    //{"HandleMulti",     pyvpi_HandleMulti,      METH_VARARGS,   "vpiHandle  vpi_handle_multi    (PLI_INT32 type, vpiHandle refHandle1, vpiHandle refHandle2, ... )"},
    {"Iterate",         pyvpi_Iterate,          METH_VARARGS,   "vpiHandle  vpi_iterate (PLI_INT32 type, vpiHandle refHandle)"},
    {"Scan",            pyvpi_Scan,             METH_VARARGS,   "vpiHandle  vpi_scan    (vpiHandle iterator)"},
+   /* for processing data*/
+   {"GetValue",        pyvpi_GetValue,         METH_VARARGS,   "void       vpi_get_value       (vpiHandle expr, p_vpi_value value_p)."},
+   {"PutValue",        pyvpi_PutValue,         METH_VARARGS,   "vpiHandle  vpi_put_value       (vpiHandle expr, p_vpi_value value_p, p_vpi_time time_p, PLI_INT32 flags)."},
    /* for processing properties */
    {"Get",             pyvpi_Get,              METH_VARARGS,   "PLI_INT32  vpi_get             (PLI_INT32 property, vpiHandle object)."},
    {"Get64",           pyvpi_Get64,            METH_VARARGS,   "PLI_INT64  vpi_get64           (PLI_INT32 property, vpiHandle object)."},
