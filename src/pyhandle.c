@@ -53,35 +53,39 @@ void pyvpi_handle_Dealloc(p_pyvpi_handle self)
     int        cnt;
     static     test = 0;
     //Free self.
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Handle is release,ptr is <0x%lx>.\n",self);
-#endif    
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is release,ptr is <0x%lx>.\n",self));
     //Check this handle is exist or not;
     if(self->_vpi_handle != NULL){
-#ifdef __LP64__        
+#ifdef __LP64__
         key = Py_BuildValue("k",self->_vpi_handle);
 #else
         key = Py_BuildValue("I",self->_vpi_handle);
 #endif
-        _tmp_h = PyDict_GetItem(_HandleDict,key);        
-        if(_tmp_h != NULL){
-            cnt = PyInt_AsLong(_tmp_h) - 1;            
-            if(cnt == 0) { 
-                PyDict_DelItem(_HandleDict,key);
-#ifdef PYVPI_DEBUG
-                vpi_printf("[PYVPI_DEBUG] pyvpi._Handle->_vpi_handle is release,ptr is <0x%lx>.\n",
-                self->_vpi_handle);
-#endif
-                vpi_release_handle(self->_vpi_handle);  //Why this free is a¡¡bug??? Confused...
+        if(self->is_free) {
+            //The handle has already release, we must remove key from dict.
+            if(PyDict_Contains(_HandleDict, key)) {
+                PyDict_DelItem(_HandleDict, key);
             }
-            else {                
-                _tmp_h = PyInt_FromLong(cnt);
-                PyDict_SetItem(_HandleDict,key,_tmp_h);
-                Py_DECREF(_tmp_h);
+        }
+        else {
+            _tmp_h = PyDict_GetItem(_HandleDict,key);        
+            if(_tmp_h != NULL){
+                cnt = PyInt_AsLong(_tmp_h) - 1;            
+                if(cnt == 0) { 
+                    PyDict_DelItem(_HandleDict,key);
+                    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->_vpi_handle is release,ptr is <0x%lx>.\n",
+                    self->_vpi_handle));
+                    vpi_release_handle(self->_vpi_handle);
+                }
+                else {                
+                    _tmp_h = PyInt_FromLong(cnt);
+                    PyDict_SetItem(_HandleDict,key,_tmp_h); //TBD How about the reference of item before set?
+                    Py_DECREF(_tmp_h);
+                }
             }
-        }        
+        }
         Py_DECREF(key);
-    }    
+    }
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -89,9 +93,9 @@ int  pyvpi_handle_Init(s_pyvpi_handle *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {NULL};
     
-    PyErr_SetString(PyExc_TypeError,  "Error, you can't new a Handle object.");
+    PyErr_SetString(VpiError,  "Error, you can't new a Handle object.");
 #ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Handle is Initial.\n");
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is Initial.\n"));
 #endif
     Py_DECREF(self);
     return -1;
@@ -100,10 +104,9 @@ int  pyvpi_handle_Init(s_pyvpi_handle *self, PyObject *args, PyObject *kwds)
 PyObject * pyvpi_handle_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_handle self = (p_pyvpi_handle)type->tp_alloc(type, 0);
-    self->_vpi_handle = NULL;
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Handle is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
-#endif
+    self->_vpi_handle   = NULL;
+    self->is_free       = 0;
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 
@@ -120,6 +123,8 @@ PyObject *_pyvpi_handle_New(vpiHandle handle){
     }
         self = (p_pyvpi_handle) pyvpi_handle_Type.tp_alloc(&pyvpi_handle_Type, 0);
         self->_vpi_handle = handle;
+        self->is_free       = 0;
+        pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,&pyvpi_handle_Type));
 #ifdef __LP64__        
         key = Py_BuildValue("k",handle);
 #else
@@ -131,9 +136,7 @@ PyObject *_pyvpi_handle_New(vpiHandle handle){
             cnt = PyInt_AsLong(_tmp_h) + 1;
         }
         else {
-#ifdef PYVPI_DEBUG
-            vpi_printf("[PYVPI_DEBUG] pyvpi._Handle._vpi_handle is allocate,ptr is <0x%lx>.\n",handle);
-#endif
+            pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle._vpi_handle is allocate,ptr is <0x%lx>.\n",handle));
         }
         _tmp_h = PyInt_FromLong(cnt);
         PyDict_SetItem(_HandleDict,key,_tmp_h);   //TBD when the key value is same, how to dealwith refer        

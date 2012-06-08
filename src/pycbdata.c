@@ -52,9 +52,7 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
     Py_DECREF(ptime);    
     Py_DECREF(self->obj_h);
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is release,ptr is <0x%lx>.\n",self);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is release,ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 /*
@@ -85,9 +83,7 @@ int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
     
     self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn.
     self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is Initial.\n");
-#endif    
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is Initial.\n"));
     return 0;
 }
 
@@ -98,6 +94,10 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     p_pyvpi_time     ptime;
     
     self = (p_pyvpi_cbdata)type->tp_alloc(type, 0);
+    Py_INCREF(Py_None);
+    self->cb_h = Py_None;
+    Py_INCREF(Py_None);
+    self->user_data = Py_None;
     if(!self){
         PyErr_SetString(PyExc_TypeError, "Can't allocate a pyvpi._cbData memory.");
         return NULL;
@@ -123,9 +123,7 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     
     Py_INCREF(Py_None);
     self->obj_h = Py_None;
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._cbData is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 

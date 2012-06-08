@@ -13,7 +13,8 @@
 typedef struct t_pyvpi_handle
 {
     PyObject_HEAD
-    vpiHandle  _vpi_handle;      //vpiHandle
+    vpiHandle   _vpi_handle;      //vpiHandle
+    PLI_INT32   is_free;
 } s_pyvpi_handle, *p_pyvpi_handle;
 
 extern void pyvpi_handle_Dealloc(p_pyvpi_handle self);
