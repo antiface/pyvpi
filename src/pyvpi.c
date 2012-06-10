@@ -591,16 +591,18 @@ PyMODINIT_FUNC initpyvpi(void)
 PLI_INT32 pyvpi_StartSim(p_cb_data cb_data_p)
 {
     char *argv[]   =   {"-v"};
-    vpi_printf("pyvpi_StartSim\n");
+    pyvpi_debug(sprintf(print_buffer,"python begin env initial.\n"));
     Py_Initialize();
     PySys_SetArgv(1,argv);
+	pyvpi_debug(sprintf(print_buffer,"python end env initial.\n"));
     return 0;
 }
 
 PLI_INT32 pyvpi_EndSim(p_cb_data cb_data_p)
 {
-    vpi_printf("pyvpi_EndSim\n");
+    pyvpi_debug(sprintf(print_buffer,"python begin env finalize.\n"));
     Py_Finalize();
+	pyvpi_debug(sprintf(print_buffer,"python end env finalize.\n"));
     return 0;
 }
 /*****************************************************************************
@@ -623,11 +625,8 @@ PLI_INT32 pyvpi_printf()
 }
 PLI_INT32 pyvpi_test( PLI_BYTE8 *user_data )
 {
-    FILE * fp = fopen("./test.py","r");
-    PyRun_SimpleFile(fp,"test.py");
-    //PyRun_SimpleString("print 'Hello python.'");
-    vpi_printf("vpi info from inner.\n");
-    fclose(fp);
+	PyObject* py_fp = PyFile_FromString("test.py", "r");
+    PyRun_SimpleFile(PyFile_AsFile(py_fp),"test.py");
     return 0;
 }
 

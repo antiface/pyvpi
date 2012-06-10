@@ -98,6 +98,7 @@ integer   nb_mireg [2:3];
   sreg = 1;
   #10 sreg = 2;
   $display("top display %d ",$time);
+  $finish(0);
 end
 
 // ----- Named Fork -----

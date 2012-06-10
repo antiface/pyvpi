@@ -1,5 +1,10 @@
-export PYTHONPATH += .:../src
+export PYTHONPATH += .:../src/pyvpi
 
+ifeq ($(OS),Windows_NT)
+    DES_TARGET    := pyvpi.pyd
+else
+    DES_TARGET    := pyvpi.so
+endif
 
 INC_PATH      = -I$(MTI_HOME)/include
 INC_PATH     += -I/usr/include/python2.7
@@ -41,4 +46,4 @@ vpi : $(SRC_C)
 	$(SRC_O)
 
 run :
-	vsim -c -do vsim.do top -pli pyvpi.so
+	vsim -c -do vsim.do top -pli $(DES_TARGET)    
