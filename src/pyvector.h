@@ -47,7 +47,7 @@ static PyMemberDef pyvpi_vector_members[]  = {
 static PyGetSetDef pyvpi_vector_getsets[]  = {
     {"size", (getter)s_pyvpi_vector_getsize, 
     (setter)s_pyvpi_vector_setsize,"get/set size.",NULL},
-    {"value", (getter)s_pyvpi_vector_getvalue, 
+    {"vec", (getter)s_pyvpi_vector_getvalue, 
     (setter)s_pyvpi_vector_setvalue,"get/set value.",NULL},
     {NULL}
 };

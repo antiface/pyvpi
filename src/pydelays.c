@@ -46,9 +46,8 @@ PyTypeObject pyvpi_delays_Type = {
 void pyvpi_delays_Dealloc(p_pyvpi_delays self)
 {
     //Free self.
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Delay is release,ptr is <0x%lx>.\n",self);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Delay is release, "
+		"ptr is <0x%lx>.\n",self));
     Py_DECREF(self->pdelays);
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -89,9 +88,7 @@ int  pyvpi_delays_Init(s_pyvpi_delays *self, PyObject *args, PyObject *kwds)
         self->pdelays       =   PyTuple_New(0);
         self->_vpi_delay.no_of_delays  =   0;
     }
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Delay is Initial.\n");
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Delay is Initial.\n"));
     return 0;
 }
 
@@ -99,9 +96,8 @@ PyObject * pyvpi_delays_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_delays self = (p_pyvpi_delays)type->tp_alloc(type, 0);
     self->_vpi_delay.da = NULL;
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Delay is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Delay is allocate,ptr is <0x%lx>, "
+		"type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 

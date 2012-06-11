@@ -52,6 +52,7 @@ pyvpi_HandleByName(PyObject *self, PyObject *args)
        return NULL;
 
     if(ans == NULL) {
+		Py_INCREF(Py_None);
         return Py_None;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -82,6 +83,7 @@ pyvpi_HandleByIndex(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
+		Py_INCREF(Py_None);
         return Py_None;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -114,6 +116,7 @@ pyvpi_Handle(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
+		Py_INCREF(Py_None);
         return Py_None;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -154,6 +157,7 @@ pyvpi_Iterate(PyObject *self, PyObject *args)
        return NULL;
 
     if(ans == NULL) {
+		Py_INCREF(Py_None);
         return Py_None;
     }
 
@@ -189,6 +193,7 @@ pyvpi_Scan(PyObject *self, PyObject *args)
         pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->Handle is "
                     "release,ptr is <0x%lx>.\n", iterator->_vpi_handle));
         iterator->is_free = 1;
+		Py_INCREF(Py_None);
         return Py_None;
     }
     return (PyObject *)oans;   
@@ -371,7 +376,7 @@ pyvpi_RegisterSysTf(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.SysTfData).");
         return NULL;
     }
-    ans = vpi_register_cb(&systfdata->_vpi_systfdata);
+    ans = vpi_register_systf(&systfdata->_vpi_systfdata);
     if(pyvpi_CheckError())
        return NULL;
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -409,7 +414,7 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
     p_pyvpi_handle  handle,oans; 
     p_pyvpi_value   value;
     p_pyvpi_time    time;
-    PLI_INT32       flags;
+    PLI_INT32       flags = vpiNoDelay;
     vpiHandle       ans;
     if (!PyArg_ParseTuple(args, "OOOi", &handle, &value, &time, flags))
     {

@@ -68,9 +68,8 @@ void pyvpi_systfdata_Dealloc(p_pyvpi_systfdata self)
     Py_XDECREF(self->calltf);
     Py_XDECREF(self->compiletf);
     Py_XDECREF(self->sizetf);
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._SysTfData is release,ptr is <0x%lx>.\n",self);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is release, "
+									  "ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -142,18 +141,16 @@ int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwd
         if(s_pyvpi_systfdata_setsizetf(self,self->sizetf,NULL) == -1) 
             return -1;
     } 
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._SysTfData is Initial,type is <0x%lx>.\n",self->_vpi_systfdata.type);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is Initial, "
+		"type is <0x%lx>.\n",self->_vpi_systfdata.type));
     return 0;
 }
 
 PyObject * pyvpi_systfdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_systfdata self = (p_pyvpi_systfdata)type->tp_alloc(type, 0);
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._SysTfData is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is allocate,ptr is <0x%lx>, "
+		"type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 
@@ -217,7 +214,8 @@ int        s_pyvpi_systfdata_setsysfunctype(s_pyvpi_systfdata *self, PyObject *v
         }
         else {
             PyErr_SetString(PyExc_TypeError,
-                            "The value must be vpi[Int,Real,Time,Sized,SizedSigned]Func when type is vpiSysFunc.");
+                            "The value must be vpi[Int,Real,Time,Sized,"
+							"SizedSigned]Func when type is vpiSysFunc.");
             return -1;
         }
     }

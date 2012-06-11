@@ -4,16 +4,27 @@ import sv_vpi_user as cons
 import random
 import unittest
 import sys
+import gc
 
+sys.path.insert(0,"pyeda/src")
+
+def test_pyeda() :
+    print "a"
+    import pyeda
+    print "b"
+    a = pyvpi.handleByName("test.o",0)
+    c = a
+    del a
+    gc.collect()
+    b = pyvpi.handleByName("test.o",0)
+    gc.collect()
+        
 def test_normal() :
     """
     """
     trgobj=pyvpi.handleByName("top.sreg",0)
-    cb = pyvpi.CbData(trgobj=trgobj)
-    val = pyvpi.Value()
+    cb = pyvpi.CbData(trgobj = trgobj)
     cb.reason = cons.cbValueChange
-    #val.format = cons.vpiBinStrVal
-    cb.value  = val
     def callback(arg):
         print arg.value.value
         print arg.time.low
@@ -34,4 +45,4 @@ def test_systfdata() :
     systfdata = pyvpi.SysTfData(tfname = "$abc")
     systfdata.calltf = calltf
 if __name__ == '__main__'     :
-    test_normal()
+    test_pyeda()

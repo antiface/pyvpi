@@ -47,9 +47,8 @@ PyTypeObject pyvpi_value_Type = {
 void pyvpi_value_Dealloc(p_pyvpi_value self)
 {
     //Free self.
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is release,ptr is <0x%lx>.\n",self);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Value is release, "
+		"ptr is <0x%lx>.\n",self));
     if(self->obj != NULL) Py_XDECREF(self->obj);
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -64,11 +63,14 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
     self->_vpi_value.value.str = PyString_AsString(self->obj);
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
                                       &self->_vpi_value.format))
+	{
+		PyErr_SetString(VpiError, "The pyvpi.Value initial args must be "
+			"(format = int).");
         return -1;
+	}
     Py_DECREF(self->obj);       //For inital, we need no object...
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is Initial,format is <0x%lx>.\n",self->_vpi_value.format);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Value is Initial, "
+									  "format is <0x%lx>.\n",self->_vpi_value.format));
     return update_format(self,self->_vpi_value.format,NULL);
 }
 
@@ -81,9 +83,8 @@ PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     Py_INCREF(Py_None);
     self-> obj = Py_None;
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._Value is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
-#endif 
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Value is allocate, "
+									  "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 

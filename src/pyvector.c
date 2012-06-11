@@ -46,9 +46,7 @@ PyTypeObject pyvpi_vector_Type = {
 void pyvpi_vector_Dealloc(p_pyvpi_vector self)
 {
     //Free self.
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is release,ptr is <0x%lx>.\n",self);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._vector is release,ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -59,9 +57,7 @@ int  pyvpi_vector_Init(s_pyvpi_vector *self, PyObject *args, PyObject *kwds)
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,                                      
                                       &self->size))
         return -1;    
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is Initial,size is <0x%lx>.\n",self->size);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._vector is Initial,size is <0x%lx>.\n",self->size));
     return update_cache(self);
 }
 
@@ -79,9 +75,8 @@ PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         Py_DECREF(self);
         return NULL;
     }    
-#ifdef PYVPI_DEBUG
-    vpi_printf("[PYVPI_DEBUG] pyvpi._vector is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type);
-#endif
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._vector is allocate,ptr is <0x%lx>, "
+		"type ptr is <0x%lx>.\n", self, type));
     return (PyObject *) self;
 }
 

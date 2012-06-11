@@ -138,3 +138,27 @@ reg ctl, dA, dB;
 multiplexer mult_inst( muxout, ctl, dA, dB );
 
 endmodule
+
+module test;
+    reg clk;
+    reg [7:0] a,b;
+    reg  [8:0] o;
+    
+    always @(*) begin
+        o = a + b;
+    end
+    
+    always #5 clk = ~clk;
+    
+    initial begin
+        $test();
+        clk = 0;
+        a   = 0;
+        b   = 0;
+        repeat(10) begin
+        #5;
+        a = a +1;
+        end
+        $finish(0);
+    end
+endmodule

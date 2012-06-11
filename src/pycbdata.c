@@ -72,14 +72,21 @@ int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
                                       &self->_vpi_cbdata.reason,
                                       &obj_h))
     {
+		PyErr_SetString(VpiError, "The pyvpi.CbData initial args must be "
+			"(reason = int,trgobj = pyvpi.Handle).");
         return -1;
     }
     
     Py_INCREF(obj_h);
     Py_DECREF(self->obj_h);    
     self->obj_h = (PyObject *)obj_h;
-    if(obj_h != Py_None) 
+    if(Py_TYPE(obj_h) ==  &pyvpi_handle_Type) {
         self->_vpi_cbdata.obj = obj_h->_vpi_handle;
+	}
+	else if(self->obj_h != Py_None) {
+		PyErr_SetString(VpiError, "The 2nd arg must be pyvpi.Handle.");
+		return -1;
+	}
     
     self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn.
     self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.
@@ -95,14 +102,15 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     
     self = (p_pyvpi_cbdata)type->tp_alloc(type, 0);
     Py_INCREF(Py_None);
-    self->cb_h = Py_None;
+    self->cb_h = Py_None;	//Initial callback handle none.
     Py_INCREF(Py_None);
-    self->user_data = Py_None;
+    self->user_data = Py_None;	//user_data
     if(!self){
         PyErr_SetString(PyExc_TypeError, "Can't allocate a pyvpi._cbData memory.");
         return NULL;
     }
     
+	//Initial cbdata's value field.
     pvalue = (p_pyvpi_value) pyvpi_value_New(&pyvpi_value_Type,PyTuple_New(0),PyDict_New());
     pyvpi_value_Init(pvalue,PyTuple_New(0),PyDict_New());
     if(!pvalue){
@@ -123,7 +131,8 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     
     Py_INCREF(Py_None);
     self->obj_h = Py_None;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is allocate,ptr is <0x%lx>, "
+		"type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 
@@ -224,8 +233,8 @@ int        s_pyvpi_cbdata_setvalue(s_pyvpi_cbdata *self, PyObject *value, void *
                         "The value object be a pyvpi._Value.");
         return -1;
     }
-    Py_DECREF(pvalue);
-    Py_INCREF(tmp);
+	Py_INCREF(tmp);
+    Py_DECREF(pvalue);    
     self->_vpi_cbdata.value = &tmp->_vpi_value;
     return 0;
 }

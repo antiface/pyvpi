@@ -31,7 +31,11 @@ SRC_O         = pyvpi.o \
                 pydelays.o	\
 				pysystfdata.o
 
-all : clean comp vpi run
+ifeq ($(OS),Windows_NT)
+    all : clean comp run
+else
+    all : clean comp vpi run
+endif
 
 clean :
 	rm -rf wlft* work *.wlf *.so *.o
@@ -46,4 +50,4 @@ vpi : $(SRC_C)
 	$(SRC_O)
 
 run :
-	vsim -c -do vsim.do top -pli $(DES_TARGET)    
+	vsim -c -do vsim.do test -pli $(DES_TARGET)    
