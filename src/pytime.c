@@ -3,7 +3,7 @@
 PyTypeObject pyvpi_time_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "pyvpi._Time",              /*tp_name*/
+    "pyvpi.Time",              /*tp_name*/
     sizeof(s_pyvpi_time),     /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)pyvpi_time_Dealloc, /*tp_dealloc*/    
@@ -46,7 +46,7 @@ PyTypeObject pyvpi_time_Type = {
 void pyvpi_time_Dealloc(p_pyvpi_time self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Time is release,ptr is <0x%lx>.\n",self));
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is release,ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -62,7 +62,7 @@ int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds)
 			"(type = int).");
         return -1;
 	}
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Time is Initial,type is <0x%lx>.\n",
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is Initial,type is <0x%lx>.\n",
 		self->_vpi_time.type));
     return 0;
 }
@@ -70,7 +70,7 @@ int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds)
 PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_time self = (p_pyvpi_time)type->tp_alloc(type, 0);
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Time is allocate, "
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is allocate, "
 									  "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }

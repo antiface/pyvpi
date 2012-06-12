@@ -98,7 +98,7 @@ int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwd
     //Check type and sysfunctype.
     if(self->_vpi_systfdata.type == vpiSysTask) {
         if(self->_vpi_systfdata.sysfunctype != vpiSysTask) {
-            PyErr_SetString(PyExc_TypeError, "Can't set sysfunctype to other values"
+            PyErr_SetString(VpiError, "Can't set sysfunctype to other values"
                     "except vpiSysTask for vpiSysTask.");
             return -1;
         }
@@ -109,13 +109,13 @@ int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwd
             self->_vpi_systfdata.sysfunctype != vpiTimeFunc  &&
             self->_vpi_systfdata.sysfunctype != vpiSizedFunc &&
             self->_vpi_systfdata.sysfunctype != vpiSizedSignedFunc ) {
-            PyErr_SetString(PyExc_TypeError, "Can't set sysfunctype to other values "
+            PyErr_SetString(VpiError, "Can't set sysfunctype to other values "
                     "except vpi[Int,Real,Time,Sized,SizedSigned]Func for vpiSysFunc.");
             return -1;
         }
     }
     else {
-        PyErr_SetString(PyExc_TypeError, "Can't set type to other values except vpiSysTask,vpiSysFunc.");
+        PyErr_SetString(VpiError, "Can't set type to other values except vpiSysTask,vpiSysFunc.");
         return -1;
     }
 
@@ -163,14 +163,14 @@ int        s_pyvpi_systfdata_settype(s_pyvpi_systfdata *self, PyObject *value, v
     //Check type, it must be vpiSysTask,vpiSysFunc.
     int tmp;
     if(!PyInt_Check(value)){
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The value must be vpiSys[Task,Func].");
         return -1;
     }
     tmp = PyInt_AS_LONG(value);
     if(tmp != vpiSysTask &&
        tmp != vpiSysFunc) {
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The value must be vpiSys[Task,Func].");
         return -1;
     }
@@ -189,7 +189,7 @@ int        s_pyvpi_systfdata_setsysfunctype(s_pyvpi_systfdata *self, PyObject *v
     //Check type, it must be vpiSysTask,vpiSysFunc.
     int tmp;
     if(!PyInt_Check(value)){
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The value must be vpiSysTask, vpi[Int,Real,Time,Sized,SizedSigned]Func.");
         return -1;
     }
@@ -197,7 +197,7 @@ int        s_pyvpi_systfdata_setsysfunctype(s_pyvpi_systfdata *self, PyObject *v
     if(self->_vpi_systfdata.type == vpiSysTask){
         //Task
         if(tmp != vpiSysTask){
-            PyErr_SetString(PyExc_TypeError,
+            PyErr_SetString(VpiError,
                             "The value must be vpiSysTask when type is vpiSysTask.");
             return -1;
         }
@@ -213,7 +213,7 @@ int        s_pyvpi_systfdata_setsysfunctype(s_pyvpi_systfdata *self, PyObject *v
             //dummy code here...
         }
         else {
-            PyErr_SetString(PyExc_TypeError,
+            PyErr_SetString(VpiError,
                             "The value must be vpi[Int,Real,Time,Sized,"
 							"SizedSigned]Func when type is vpiSysFunc.");
             return -1;
@@ -232,17 +232,17 @@ int        s_pyvpi_systfdata_settfname(s_pyvpi_systfdata *self, PyObject *value,
 {
     char * name;
     if(value == NULL){
-        PyErr_SetString(PyExc_TypeError, "Can't set tfname to None.");
+        PyErr_SetString(VpiError, "Can't set tfname to None.");
         return -1;
     }
 
     name = PyString_AsString(value);
     if(strlen(name)<2) {
-        PyErr_SetString(PyExc_TypeError, "The tfname len must big than 1.");
+        PyErr_SetString(VpiError, "The tfname len must big than 1.");
         return -1;
     }
     if(name[0] != '$') {
-        PyErr_SetString(PyExc_TypeError, "The tfname must start with $");
+        PyErr_SetString(VpiError, "The tfname must start with $");
         return -1;
     }
     Py_INCREF(value);
@@ -260,11 +260,11 @@ PyObject * s_pyvpi_systfdata_getcalltf(s_pyvpi_systfdata *self, void *closure)
 int        s_pyvpi_systfdata_setcalltf(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
     if(value == NULL){
-        PyErr_SetString(PyExc_TypeError, "Can't set calltf to None.");
+        PyErr_SetString(VpiError, "Can't set calltf to None.");
         return -1;
     }
     if (!PyCallable_Check(value)) {
-        PyErr_SetString(PyExc_TypeError, "calltf must be a callable.");
+        PyErr_SetString(VpiError, "calltf must be a callable.");
         return -1;
     }
     Py_INCREF(value);    
@@ -282,11 +282,11 @@ PyObject * s_pyvpi_systfdata_getcompiletf(s_pyvpi_systfdata *self, void *closure
 int        s_pyvpi_systfdata_setcompiletf(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
     if(value == NULL){
-        PyErr_SetString(PyExc_TypeError, "Can't set compiletf to None.");
+        PyErr_SetString(VpiError, "Can't set compiletf to None.");
         return -1;
     }
     if (!PyCallable_Check(value)) {
-        PyErr_SetString(PyExc_TypeError, "calltf must be a callable.");
+        PyErr_SetString(VpiError, "calltf must be a callable.");
         return -1;
     }
     Py_INCREF(value);    
@@ -304,11 +304,11 @@ PyObject * s_pyvpi_systfdata_getsizetf(s_pyvpi_systfdata *self, void *closure)
 int        s_pyvpi_systfdata_setsizetf(s_pyvpi_systfdata *self, PyObject *value, void *closure)
 {
     if(value == NULL){
-        PyErr_SetString(PyExc_TypeError, "Can't set sizetf to None.");
+        PyErr_SetString(VpiError, "Can't set sizetf to None.");
         return -1;
     }
     if (!PyCallable_Check(value)) {
-        PyErr_SetString(PyExc_TypeError, "calltf must be a callable.");
+        PyErr_SetString(VpiError, "calltf must be a callable.");
         return -1;
     }
     Py_INCREF(value);    

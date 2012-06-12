@@ -25,7 +25,7 @@ extern int pyvpi_CheckError( void );
 #define PRINT_ERROR     60
 #define PRINT_FATAL     70
 
-static int  print_level     = PRINT_VERBOSE;
+static int  print_level     = PRINT_DEBUG;
 static char print_buffer[2048];
 
 #define pyvpi_verbose(str)  \

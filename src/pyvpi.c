@@ -18,7 +18,20 @@ pyvpi_CheckError( void )
 
     error_code = vpi_chk_error( &error_info );
     if ( error_code && error_info.message ) {
-        PyErr_SetString(PyExc_TypeError,  error_info.message);
+        PyErr_SetString(VpiError,  error_info.message);
+    }
+    return error_code;
+}
+
+static int 
+CheckError( void )
+{
+    int              error_code;
+    s_vpi_error_info error_info;
+
+    error_code = vpi_chk_error( &error_info );
+    if ( error_code && error_info.message ) {
+        vpi_printf("%s\n",error_info.message);
     }
     return error_code;
 }
@@ -346,7 +359,7 @@ pyvpi_GetCbInfo(PyObject *self, PyObject *args)
 //# PyObject*       ptpl = PyTuple_New(0);
 //# if (!PyArg_ParseTuple(args, "O", &object))
 //# {
-//#     PyErr_SetString(PyExc_TypeError,  "Error args, must be (pyvpi._vpiHandle).");
+//#     PyErr_SetString(VpiError,  "Error args, must be (pyvpi._vpiHandle).");
 //#     return NULL;
 //# }
 //# //Initial cbdata;
@@ -413,12 +426,12 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
 {
     p_pyvpi_handle  handle,oans; 
     p_pyvpi_value   value;
-    p_pyvpi_time    time;
+    p_pyvpi_time    time = (p_pyvpi_time) Py_None;
     PLI_INT32       flags = vpiNoDelay;
     vpiHandle       ans;
-    if (!PyArg_ParseTuple(args, "OOOi", &handle, &value, &time, flags))
+    if (!PyArg_ParseTuple(args, "OO|Oi", &handle, &value, &time, flags))
     {
-        PyErr_SetString(PyExc_TypeError,  "Error args, must be (pyvpi.Handle,pyvpi.Value).");
+        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle,pyvpi.Value).");
         return NULL;
     }
     if(Py_TYPE(handle) != &pyvpi_handle_Type) {    
@@ -454,6 +467,7 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
      * */
     p_pyvpi_handle  handle; 
     p_pyvpi_value   value;
+	PLI_UINT32		blen;
     if (!PyArg_ParseTuple(args, "OO", &handle, &value))
     {
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle,pyvpi.Value).");
@@ -467,7 +481,21 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, 2nd arg must be pyvpi.Value.");
         return NULL;
     }
+	if(value->_vpi_value.format == vpiVectorVal) {
+		p_pyvpi_vector pvec;
+        blen = vpi_get(vpiSize,handle->_vpi_handle);
+        if(pyvpi_CheckError()){
+			return NULL;
+		}
+		/* Update vetcotr cache to store the value.*/		
+		pvec = (p_pyvpi_vector) value->obj;
+		if(blen > pvec->size) {
+			pvec->size = blen;
+			pyvpi_vector_update_cache(pvec);
+		}
+    }
     vpi_get_value(handle->_vpi_handle,&value->_vpi_value);
+	pyvip_value_update_value(value,&value->_vpi_value,blen);
     return Py_None;
 }
 
@@ -633,6 +661,48 @@ PLI_INT32 pyvpi_test( PLI_BYTE8 *user_data )
 	PyObject* py_fp = PyFile_FromString("test.py", "r");
     PyRun_SimpleFile(PyFile_AsFile(py_fp),"test.py");
     return 0;
+}
+
+PLI_INT32 
+pyvpi_main( PLI_BYTE8 *user_data )
+{
+    return 0;
+}
+
+PLI_INT32 
+pyvpi_main_check( PLI_BYTE8 *user_data )
+{
+	vpiHandle self;
+	vpiHandle arg_iter;
+	vpiHandle arg;
+	PLI_INT32 index = 0;
+	PLI_INT32 re = 0;
+	self = vpi_handle(vpiSysTfCall,NULL);
+	arg_iter = vpi_iterate(vpiArgument,self);
+	if((re = CheckError()) && arg_iter){
+		while(arg =vpi_scan(arg_iter)){
+			if(re = CheckError())
+				break;
+			switch(index){
+			case 0 :
+				if(vpi_get(vpiType,arg) == vpiConstant &&
+					vpi_get(vpiConstType,arg) == vpiStringConst){
+				}
+				else {
+					pyvpi_fatal(sprintf(print_buffer,"The 1st of pyvpi_main must be a "
+						"path string which indicate a py file."));
+				}
+				break;
+			default :
+				pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only accept one"
+					" string arg."));
+				break;
+			}
+			index++;
+			vpi_free_object(arg);
+		}
+	}
+    return re;
 }
 
 /*****************************************************************************

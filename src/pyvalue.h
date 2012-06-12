@@ -37,7 +37,7 @@ extern int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds
 extern PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
 //misc
-extern void update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32 blen);
+extern void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32 blen);
 static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* nobj);
 
 //Get/Set Functions ......

@@ -29,7 +29,7 @@ extern PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject 
 
 //Misc Functions ... ...
 //Update cache if size is changed, return 0 successful, -1 failed.
-static PLI_INT32 update_cache(s_pyvpi_vector *self);
+extern PLI_INT32 pyvpi_vector_update_cache(s_pyvpi_vector *self);
 
 //Get/Set Functions ... ...
 //size

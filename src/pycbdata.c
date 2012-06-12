@@ -106,7 +106,7 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_INCREF(Py_None);
     self->user_data = Py_None;	//user_data
     if(!self){
-        PyErr_SetString(PyExc_TypeError, "Can't allocate a pyvpi._cbData memory.");
+        PyErr_SetString(VpiError, "Can't allocate a pyvpi._cbData memory.");
         return NULL;
     }
     
@@ -114,7 +114,7 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     pvalue = (p_pyvpi_value) pyvpi_value_New(&pyvpi_value_Type,PyTuple_New(0),PyDict_New());
     pyvpi_value_Init(pvalue,PyTuple_New(0),PyDict_New());
     if(!pvalue){
-        PyErr_SetString(PyExc_TypeError, "Can't new a pyvpi._Value object.");
+        PyErr_SetString(VpiError, "Can't new a pyvpi._Value object.");
         return NULL;
     }
     
@@ -124,7 +124,7 @@ PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     ptime = (p_pyvpi_time) pyvpi_time_New(&pyvpi_time_Type,PyTuple_New(0),PyDict_New());
     pyvpi_time_Init(ptime,PyTuple_New(0),PyDict_New());
     if(!ptime){
-        PyErr_SetString(PyExc_TypeError, "Can't new a pyvpi._Time object.");
+        PyErr_SetString(VpiError, "Can't new a pyvpi.Time object.");
         return NULL;
     }
     self->_vpi_cbdata.time = &ptime->_vpi_time;
@@ -145,12 +145,12 @@ PyObject * s_pyvpi_cbdata_getreason(s_pyvpi_cbdata *self, void *closure)
 int        s_pyvpi_cbdata_setreason(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Can't set reason to NULL.");
+        PyErr_SetString(VpiError, "Can't set reason to NULL.");
         return -1;
     }
 
     if (! PyInt_Check(value)) {
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The reason must be an int.");
         return -1;
     }
@@ -168,11 +168,11 @@ int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void 
 {
     p_pyvpi_handle  handle;
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Can't set trigger object to NULL.");
+        PyErr_SetString(VpiError, "Can't set trigger object to NULL.");
         return -1;
     }
     if (!(PyObject_TypeCheck(value,&pyvpi_handle_Type))) {
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The reason trigger object be a pyvpi._vpiHandle.");
         return -1;
     }
@@ -198,12 +198,12 @@ int        s_pyvpi_cbdata_settime(s_pyvpi_cbdata *self, PyObject *value, void *c
     p_pyvpi_time ptime, tmp = (p_pyvpi_time) value;
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Can't set time object to NULL.");
+        PyErr_SetString(VpiError, "Can't set time object to NULL.");
         return -1;
     }
     if (! PyObject_TypeCheck(value,&pyvpi_time_Type)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "The value object be a pyvpi._Time.");
+        PyErr_SetString(VpiError,
+                        "The value object be a pyvpi.Time.");
         return -1;
     }
     Py_DECREF(ptime);
@@ -225,11 +225,11 @@ int        s_pyvpi_cbdata_setvalue(s_pyvpi_cbdata *self, PyObject *value, void *
     p_pyvpi_value pvalue, tmp = (p_pyvpi_value) value;
     pvalue = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Can't set value object to NULL.");
+        PyErr_SetString(VpiError, "Can't set value object to NULL.");
         return -1;
     }
     if (! PyObject_TypeCheck(value,&pyvpi_value_Type)) {
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The value object be a pyvpi._Value.");
         return -1;
     }
@@ -246,12 +246,12 @@ PyObject * s_pyvpi_cbdata_getindex(s_pyvpi_cbdata *self, void *closure)
 int        s_pyvpi_cbdata_setindex(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Can't set index to NULL.");
+        PyErr_SetString(VpiError, "Can't set index to NULL.");
         return -1;
     }
 
     if (! PyInt_Check(value)) {
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The index must be an int.");
         return -1;
     }
@@ -272,7 +272,7 @@ PyObject * s_pyvpi_cbdata_getcallback(s_pyvpi_cbdata *self, void *closure)
 
 int        s_pyvpi_cbdata_setcallback(s_pyvpi_cbdata *self, PyObject *value, void *closure){
     if (!PyCallable_Check(value)) {
-            PyErr_SetString(PyExc_TypeError, "Parameter must be a callable.");
+            PyErr_SetString(VpiError, "Parameter must be a callable.");
             return -1;
         }
     Py_XINCREF(value);
@@ -299,7 +299,7 @@ PLI_INT32 _pyvpi_cb_rtn(p_cb_data data)
         blen = vpi_get(vpiSize,data->obj);
         pyvpi_CheckError();   //TBD Strange here...
     }    
-    update_value(pv,data->value,blen); 
+    pyvip_value_update_value(pv,data->value,blen); 
 
     //2. We must copy the tmp time to our struct...
     *(self->_vpi_cbdata.time) = *(data->time); //This will force change _Time object value.

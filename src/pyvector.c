@@ -3,7 +3,7 @@
 PyTypeObject pyvpi_vector_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "pyvpi._vector",              /*tp_name*/
+    "pyvpi.Vector",              /*tp_name*/
     sizeof(s_pyvpi_vector),     /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)pyvpi_vector_Dealloc, /*tp_dealloc*/    
@@ -46,19 +46,27 @@ PyTypeObject pyvpi_vector_Type = {
 void pyvpi_vector_Dealloc(p_pyvpi_vector self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._vector is release,ptr is <0x%lx>.\n",self));
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is release,ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 
 int  pyvpi_vector_Init(s_pyvpi_vector *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"size", NULL};
-    self->size = 1;     //Default value.
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,                                      
-                                      &self->size))
+    static char *kwlist[] = {"size","vec", NULL};
+	PyObject * tmpval = NULL;
+    self->size = 4*32;     //Default value.
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist,                                      
+                                      &self->size,&tmpval))
         return -1;    
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._vector is Initial,size is <0x%lx>.\n",self->size));
-    return update_cache(self);
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is Initial,size is <0x%lx>.\n",self->size));
+	/*1. update vector size.*/	
+    if(pyvpi_vector_update_cache(self) != 0){
+		return -1;
+	}	
+	if(tmpval != NULL){
+		return s_pyvpi_vector_setvalue(self,tmpval,Py_None);
+	}
+	return 0;
 }
 
 PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -66,7 +74,7 @@ PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     p_pyvpi_vector self = (p_pyvpi_vector)type->tp_alloc(type, 0);
     if(self == NULL) 
         return NULL;
-    self->cache_size = 8;     //Default cache value is 8*32 bits.
+    self->cache_size = 4;     //Default cache value is 4*32 bits.
     self->cache_ptr  = (p_vpi_vecval) malloc(self->cache_size * sizeof(s_vpi_vecval));    
     self->_vpi_vector= self->cache_ptr;
     if(self->cache_ptr == NULL) {
@@ -74,14 +82,14 @@ PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
                         "There is no enouth memory for vector assign.");    
         Py_DECREF(self);
         return NULL;
-    }    
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._vector is allocate,ptr is <0x%lx>, "
+    }
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is allocate,ptr is <0x%lx>, "
 		"type ptr is <0x%lx>.\n", self, type));
     return (PyObject *) self;
 }
 
 //Misc functions ... ....
-static PLI_INT32 update_cache(s_pyvpi_vector *self)
+PLI_INT32 pyvpi_vector_update_cache(s_pyvpi_vector *self)
 {
     PLI_UINT32 numvals ;
     numvals = (self->size + 31) >> 5;
@@ -96,7 +104,7 @@ static PLI_INT32 update_cache(s_pyvpi_vector *self)
         self->cache_size = self->cache_size * 2;
         self->cache_ptr  = tmp;
     } 
-    else if(numvals < self->cache_size/2) {
+    else if(numvals < self->cache_size/2 && numvals > 4) {
         p_vpi_vecval tmp = (p_vpi_vecval) malloc(self->cache_size * sizeof(s_vpi_vecval) /2);
         if(tmp == NULL) {
             PyErr_SetString(PyExc_MemoryError,
@@ -110,7 +118,8 @@ static PLI_INT32 update_cache(s_pyvpi_vector *self)
     self->_vpi_vector = self->cache_ptr;
     return 0;
 }
-//Getter/Setter 
+/* \brief Getter/Setter 
+*/
 PyObject * s_pyvpi_vector_getsize(s_pyvpi_vector *self, void *closure)
 {
     return Py_BuildValue("I", self->size);
@@ -118,17 +127,17 @@ PyObject * s_pyvpi_vector_getsize(s_pyvpi_vector *self, void *closure)
 int        s_pyvpi_vector_setsize(s_pyvpi_vector *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Can't set size to NULL.");
+        PyErr_SetString(VpiError, "Can't set size to NULL.");
         return -1;
     }
 
     if (! PyInt_Check(value)) {
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The reason must be an int.");
         return -1;
     }
     self->size = PyInt_AS_LONG(value);
-    return update_cache(self);
+    return pyvpi_vector_update_cache(self);
 }
 
 /* Get value attrib.
@@ -159,12 +168,12 @@ int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *
     PyObject*       tpl;
     //First get value(Must be list) size
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Can't set value to NULL.");
+        PyErr_SetString(VpiError, "Can't set value to NULL.");
         return -1;
     }
 
     if (! PyList_Check(value)) {
-        PyErr_SetString(PyExc_TypeError,
+        PyErr_SetString(VpiError,
                         "The reason must be an List.");
         return -1;
     }
@@ -173,12 +182,12 @@ int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *
     for(i = 0; i< numvals; i++){
         aval = 0;
         bval = 0;
-    if(i<vsize) { //Keep value didn't assgin zero.
+		if(i < vsize) { //Keep value didn't assgin zero.
             tpl = PyList_GetItem(value,i);
             if(PyTuple_Check(tpl)){
                 //If this is a tuple.
                 if(!PyArg_ParseTuple(tpl,"|II",&aval,&bval)){
-                    PyErr_SetString(PyExc_TypeError, "Can't set None (|int) to value.");
+                    PyErr_SetString(VpiError, "Can't set None (|int) to value.");
                     return -1;
                 }
             }
@@ -190,9 +199,13 @@ int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *
                 //If this is a integer.
                 aval = PyInt_AS_LONG(tpl);
             }
-    }
+			else {
+				PyErr_SetString(VpiError, "Can't set None (|int) to value.");
+                return -1;
+			}
+		}
         self->_vpi_vector[i].aval = aval;
-        self->_vpi_vector[i].aval = bval;
+        self->_vpi_vector[i].bval = bval;
     }
     return 0;
 }

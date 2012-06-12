@@ -83,7 +83,7 @@ PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     Py_INCREF(Py_None);
     self-> obj = Py_None;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Value is allocate, "
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is allocate, "
 									  "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
@@ -98,7 +98,7 @@ int        s_pyvpi_value_setvalue(s_pyvpi_value *self, PyObject *value, void *cl
 {
     PyObject * tmp;
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Cannot set index to NULL.");
+        PyErr_SetString(VpiError, "Cannot set index to NULL.");
         return -1;
     }
     Py_INCREF(self->obj);
@@ -119,7 +119,7 @@ int        s_pyvpi_value_setvalue(s_pyvpi_value *self, PyObject *value, void *cl
  * This function must deal with the reference, this is different with
  * update_format.
  */
-void update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32 blen)
+void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32 blen)
 {
     p_pyvpi_vector pvector;
     p_pyvpi_time   ptime;
@@ -127,6 +127,7 @@ void update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32 blen)
     PLI_INT32   numvals,i;
     PyObject*   tmpobj;
     PyObject*   dictobj;
+
     Py_INCREF(self->obj);
     tmpobj = self->obj;
     Py_DECREF(self->obj);
@@ -161,13 +162,13 @@ void update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32 blen)
         PyDict_SetItem(dictobj,PyString_FromString("size"),PyInt_FromLong(blen));
         pyvpi_vector_Init((p_pyvpi_vector)self->obj,PyTuple_New(0),dictobj);    //TBD check error.
         pvector = (p_pyvpi_vector) self->obj;
-        self->_vpi_value.value.vector = pvector->_vpi_vector;
         numvals = (blen + 31) >> 5;
         for(i=0; i <numvals; i++)
         {
             pvector->_vpi_vector[i].aval = ovalp->value.vector[i].aval;
             pvector->_vpi_vector[i].bval = ovalp->value.vector[i].bval;
         }
+		self->_vpi_value.value.vector = pvector->_vpi_vector;
         break;
     case vpiStrengthVal:
         self->obj    = pyvpi_strengthval_New(&pyvpi_strengthval_Type,PyTuple_New(0),PyDict_New());
@@ -219,7 +220,7 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
         if(self->obj == NULL)
             self->obj    = PyString_FromString("");
         if (! PyString_Check(self->obj)) {
-                PyErr_SetString(PyExc_TypeError,
+                PyErr_SetString(VpiError,
                                 "The value must be a string<Current format is string>.");
                 return -1;
             }
@@ -229,7 +230,7 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
         if(self->obj == NULL)
             self->obj    = PyInt_FromLong(vpi0);
         if (! PyInt_Check(self->obj) || PyInt_AS_LONG(self->obj) < 0 || PyInt_AS_LONG(self->obj) > 3) {
-            PyErr_SetString(PyExc_TypeError,
+            PyErr_SetString(VpiError,
                             "The value must be vpi[0,1,X,Z]<Current format is vpiScalarVal>.");
             return -1;
         }
@@ -239,7 +240,7 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
         if(self->obj == NULL)
             self->obj    = PyInt_FromLong(0);
         if (! PyInt_Check(self->obj)) {
-                PyErr_SetString(PyExc_TypeError,
+                PyErr_SetString(VpiError,
                                 "The value must be an int<Current format is vpiIntVal>.");
                 return -1;
             }
@@ -249,7 +250,7 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
         if(self->obj == NULL)
             self->obj    = PyFloat_FromDouble(0.0);
         if (! PyFloat_Check(self->obj)) {
-            PyErr_SetString(PyExc_TypeError,
+            PyErr_SetString(VpiError,
                             "The value must be an float<Current format is vpiRealVal>.");
             return -1;
         }
@@ -261,8 +262,8 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
             pyvpi_vector_Init((p_pyvpi_vector)self->obj,PyTuple_New(0),PyDict_New());   //TBD check error
         }
         if (! PyObject_TypeCheck(self->obj,&pyvpi_vector_Type)) {
-            PyErr_SetString(PyExc_TypeError,
-                            "The value object be a pyvpi._Vector<Current format is vpiVectorVal>.");
+            PyErr_SetString(VpiError,
+                            "The value object be a pyvpi.Vector<Current format is vpiVectorVal>.");
             return -1;
         }
         pvector = (p_pyvpi_vector) self->obj;
@@ -274,7 +275,7 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
             pyvpi_strengthval_Init((p_pyvpi_strengthval)self->obj,PyTuple_New(0),PyDict_New());
         }
         if (! PyObject_TypeCheck(self->obj,&pyvpi_strengthval_Type)) {
-            PyErr_SetString(PyExc_TypeError,
+            PyErr_SetString(VpiError,
                             "The value object be a pyvpi._Strength<Current format is vpiStrengthVal>.");
             return -1;
         }
@@ -287,8 +288,8 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
             pyvpi_time_Init((p_pyvpi_time)self->obj,PyTuple_New(0),PyDict_New());
         }
         if (! PyObject_TypeCheck(self->obj,&pyvpi_time_Type)) {
-            PyErr_SetString(PyExc_TypeError,
-                            "The value object be a pyvpi._Time<Current format is vpiTimeVal>.");
+            PyErr_SetString(VpiError,
+                            "The value object be a pyvpi.Time<Current format is vpiTimeVal>.");
             return -1;
         }
         ptime = (p_pyvpi_time) self->obj;
@@ -297,6 +298,11 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
         /* not sure what to do here? */
     case vpiObjTypeVal: case vpiSuppressVal:
         break;
+	default :
+		PyErr_SetString(VpiError,"The format of pyvpi.Value must be "
+			"vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,Vector,"
+			"Strength,Suppress,Time,ObjType]Val");
+		return -1;
     }
     return 0;
 }
