@@ -3,7 +3,7 @@
 PyTypeObject pyvpi_cbdata_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "pyvpi._cbData",            /*tp_name*/
+    "pyvpi.CbData",            /*tp_name*/
     sizeof(s_pyvpi_cbdata),    /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)pyvpi_cbdata_Dealloc, /*tp_dealloc*/    
@@ -42,7 +42,8 @@ PyTypeObject pyvpi_cbdata_Type = {
     pyvpi_cbdata_New,           /* tp_new */
 };
 
-void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
+void 
+pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
 {
     //Free self.
     p_pyvpi_value pvalue;
@@ -52,7 +53,7 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
     Py_DECREF(ptime);    
     Py_DECREF(self->obj_h);
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is release,ptr is <0x%lx>.\n",self));
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.CbData is release,ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 /*
@@ -62,87 +63,131 @@ void pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
  *      trg_obj = ? (vpiHandle)
  *      cb_time = ? (PyObject * pyvpi.Time)
  */
-int  pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
+int  
+pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
 {
     //static char *kwlist[] = {"reason","trgobj","time","value","index", NULL};
-    static char *kwlist[] = {"reason","trgobj", NULL};
-    p_pyvpi_handle        obj_h = (p_pyvpi_handle) Py_None;
-    Py_INCREF(obj_h);
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist,
+    static char *kwlist[] = {"reason","trgobj","value","time","callback", NULL};
+	p_pyvpi_value pvalue = NULL;
+    p_pyvpi_time  ptime = NULL;
+	p_pyvpi_handle obj_h = NULL;
+    PyObject* callback = NULL;
+
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iOOO", kwlist,
                                       &self->_vpi_cbdata.reason,
-                                      &obj_h))
+                                      &obj_h,
+									  &pvalue,
+									  &ptime,
+									  &callback))
     {
 		PyErr_SetString(VpiError, "The pyvpi.CbData initial args must be "
-			"(reason = int,trgobj = pyvpi.Handle).");
+			"(reason = int,trgobj = pyvpi.Handle, value = pyvpi.Value"
+			", time = pyvpi.Time, callback = *func).");
         return -1;
     }
-    
-    Py_INCREF(obj_h);
-    Py_DECREF(self->obj_h);    
-    self->obj_h = (PyObject *)obj_h;
-    if(Py_TYPE(obj_h) ==  &pyvpi_handle_Type) {
+
+	/* Update trgobj */        
+	if(obj_h == NULL) {
+		self->_vpi_cbdata.obj = NULL;
+		obj_h = (p_pyvpi_handle) Py_None;
+	}
+	else if(Py_TYPE(obj_h) ==  &pyvpi_handle_Type) {
         self->_vpi_cbdata.obj = obj_h->_vpi_handle;
 	}
-	else if(self->obj_h != Py_None) {
+	else {
 		PyErr_SetString(VpiError, "The 2nd arg must be pyvpi.Handle.");
 		return -1;
 	}
-    
+	Py_INCREF(obj_h);
+    Py_XDECREF(self->obj_h);
+	self->obj_h = (PyObject *)obj_h;
+
+	/* Initial cbdata's value field. */
+	if(pvalue == NULL) {
+		pvalue = (p_pyvpi_value) pyvpi_value_New(&pyvpi_value_Type,Py_None,Py_None);
+		pyvpi_value_Init(pvalue,Py_None,Py_None);
+	}
+    else if(Py_TYPE(pvalue) ==  &pyvpi_value_Type){
+		Py_INCREF(pvalue);
+		if(self->_vpi_cbdata.value != NULL) {
+			p_pyvpi_value _pvalue  = (p_pyvpi_value)
+				((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
+			Py_DECREF(_pvalue);
+		}
+    }
+	else {
+		PyErr_SetString(VpiError, "The 3rd arg must be  pyvpi.Value.");
+        return -1;
+	}
+	self->_vpi_cbdata.value = &pvalue->_vpi_value;
+
+	/* Initial cbdata's time  */
+	if(ptime == NULL) {
+		ptime = (p_pyvpi_time) pyvpi_time_New(&pyvpi_time_Type,Py_None,PyDict_New());
+		pyvpi_time_Init(ptime,Py_None,Py_None);
+	}
+	else if(Py_TYPE(ptime) == &pyvpi_time_Type) {
+		Py_INCREF(ptime);
+		if(self->_vpi_cbdata.time != NULL) {
+			p_pyvpi_time _ptime = (p_pyvpi_time)
+				((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
+			Py_DECREF(_ptime);
+		}
+	}
+	else {
+		PyErr_SetString(VpiError, "The 4th arg must be pyvpi.Time.");
+        return -1;
+	}
+	self->_vpi_cbdata.time = &ptime->_vpi_time;
+  
+    /* Initial callback function */
+	if(callback != NULL && PyCallable_Check(callback)) {
+		Py_XDECREF(self->callback);
+		Py_INCREF(callback);
+		self->callback = callback;
+	}
+	else if(callback != NULL) {
+		PyErr_SetString(VpiError, "The 5th arg must be a function.");
+        return -1;
+	}
     self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn.
     self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is Initial.\n"));
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.CbData is Initial.\n"));
     return 0;
 }
 
-PyObject * pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
+PyObject *
+pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     p_pyvpi_cbdata   self;
-    p_pyvpi_value    pvalue;
-    p_pyvpi_time     ptime;
-    
+    	
     self = (p_pyvpi_cbdata)type->tp_alloc(type, 0);
+	self->_vpi_cbdata.value = NULL;
+	self->_vpi_cbdata.time  = NULL;	
     Py_INCREF(Py_None);
     self->cb_h = Py_None;	//Initial callback handle none.
     Py_INCREF(Py_None);
     self->user_data = Py_None;	//user_data
+	Py_INCREF(Py_None);
+	self->callback = Py_None;
     if(!self){
-        PyErr_SetString(VpiError, "Can't allocate a pyvpi._cbData memory.");
+        PyErr_SetString(VpiError, "Can't allocate a pyvpi.CbData memory.");
         return NULL;
     }
-    
-	//Initial cbdata's value field.
-    pvalue = (p_pyvpi_value) pyvpi_value_New(&pyvpi_value_Type,PyTuple_New(0),PyDict_New());
-    pyvpi_value_Init(pvalue,PyTuple_New(0),PyDict_New());
-    if(!pvalue){
-        PyErr_SetString(VpiError, "Can't new a pyvpi._Value object.");
-        return NULL;
-    }
-    
-    //Py_INCREF(pvalue);  //Add reference for value. <Don't add pvalue reference.>
-    self->_vpi_cbdata.value = &pvalue->_vpi_value;
-
-    ptime = (p_pyvpi_time) pyvpi_time_New(&pyvpi_time_Type,PyTuple_New(0),PyDict_New());
-    pyvpi_time_Init(ptime,PyTuple_New(0),PyDict_New());
-    if(!ptime){
-        PyErr_SetString(VpiError, "Can't new a pyvpi.Time object.");
-        return NULL;
-    }
-    self->_vpi_cbdata.time = &ptime->_vpi_time;
-    
-    Py_INCREF(Py_None);
-    self->obj_h = Py_None;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._cbData is allocate,ptr is <0x%lx>, "
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.CbData is allocate,ptr is <0x%lx>, "
 		"type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 
 //Get/Set Functions
 //reason
-PyObject * s_pyvpi_cbdata_getreason(s_pyvpi_cbdata *self, void *closure)
+PyObject *
+s_pyvpi_cbdata_getreason(s_pyvpi_cbdata *self, void *closure)
 {
     return Py_BuildValue("i", self->_vpi_cbdata.reason);
 }
-int        s_pyvpi_cbdata_setreason(s_pyvpi_cbdata *self, PyObject *value, void *closure)
+int        
+s_pyvpi_cbdata_setreason(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
         PyErr_SetString(VpiError, "Can't set reason to NULL.");
@@ -158,13 +203,15 @@ int        s_pyvpi_cbdata_setreason(s_pyvpi_cbdata *self, PyObject *value, void 
     return 0;
 }
 //trigger object
-PyObject * s_pyvpi_cbdata_gettrgobj(s_pyvpi_cbdata *self, void *closure)
+PyObject *
+s_pyvpi_cbdata_gettrgobj(s_pyvpi_cbdata *self, void *closure)
 {
     Py_INCREF(self->obj_h);
     return self->obj_h;
 }
 
-int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void *closure)
+int        
+s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
     p_pyvpi_handle  handle;
     if (value == NULL) {
@@ -186,14 +233,16 @@ int        s_pyvpi_cbdata_settrgobj(s_pyvpi_cbdata *self, PyObject *value, void 
 }
 
 //trigger time
-PyObject * s_pyvpi_cbdata_gettime(s_pyvpi_cbdata *self, void *closure)
+PyObject * 
+s_pyvpi_cbdata_gettime(s_pyvpi_cbdata *self, void *closure)
 {
     p_pyvpi_time ptime;
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
     Py_INCREF(ptime);
     return (PyObject *) ptime;
 }
-int        s_pyvpi_cbdata_settime(s_pyvpi_cbdata *self, PyObject *value, void *closure)
+int        
+s_pyvpi_cbdata_settime(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
     p_pyvpi_time ptime, tmp = (p_pyvpi_time) value;
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
@@ -212,7 +261,8 @@ int        s_pyvpi_cbdata_settime(s_pyvpi_cbdata *self, PyObject *value, void *c
     return 0;
 }
 //value
-PyObject * s_pyvpi_cbdata_getvalue(s_pyvpi_cbdata *self, void *closure)
+PyObject * 
+s_pyvpi_cbdata_getvalue(s_pyvpi_cbdata *self, void *closure)
 {
     p_pyvpi_value pvalue ;
     pvalue = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
@@ -220,7 +270,8 @@ PyObject * s_pyvpi_cbdata_getvalue(s_pyvpi_cbdata *self, void *closure)
     return (PyObject *) pvalue;
 }
 
-int        s_pyvpi_cbdata_setvalue(s_pyvpi_cbdata *self, PyObject *value, void *closure)
+int        
+s_pyvpi_cbdata_setvalue(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
     p_pyvpi_value pvalue, tmp = (p_pyvpi_value) value;
     pvalue = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
@@ -230,7 +281,7 @@ int        s_pyvpi_cbdata_setvalue(s_pyvpi_cbdata *self, PyObject *value, void *
     }
     if (! PyObject_TypeCheck(value,&pyvpi_value_Type)) {
         PyErr_SetString(VpiError,
-                        "The value object be a pyvpi._Value.");
+                        "The value object be a pyvpi.Value.");
         return -1;
     }
 	Py_INCREF(tmp);
@@ -239,11 +290,13 @@ int        s_pyvpi_cbdata_setvalue(s_pyvpi_cbdata *self, PyObject *value, void *
     return 0;
 }
 //index
-PyObject * s_pyvpi_cbdata_getindex(s_pyvpi_cbdata *self, void *closure)
+PyObject * 
+s_pyvpi_cbdata_getindex(s_pyvpi_cbdata *self, void *closure)
 {
     return Py_BuildValue("i", self->_vpi_cbdata.index);
 }
-int        s_pyvpi_cbdata_setindex(s_pyvpi_cbdata *self, PyObject *value, void *closure)
+int       
+s_pyvpi_cbdata_setindex(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
         PyErr_SetString(VpiError, "Can't set index to NULL.");
@@ -259,7 +312,8 @@ int        s_pyvpi_cbdata_setindex(s_pyvpi_cbdata *self, PyObject *value, void *
     return 0;
 }
 //callback
-PyObject * s_pyvpi_cbdata_getcallback(s_pyvpi_cbdata *self, void *closure)
+PyObject * 
+s_pyvpi_cbdata_getcallback(s_pyvpi_cbdata *self, void *closure)
 {   
     if(self->callback == NULL) {
         Py_INCREF(Py_None);
@@ -270,7 +324,8 @@ PyObject * s_pyvpi_cbdata_getcallback(s_pyvpi_cbdata *self, void *closure)
     }
 }
 
-int        s_pyvpi_cbdata_setcallback(s_pyvpi_cbdata *self, PyObject *value, void *closure){
+int        
+s_pyvpi_cbdata_setcallback(s_pyvpi_cbdata *self, PyObject *value, void *closure){
     if (!PyCallable_Check(value)) {
             PyErr_SetString(VpiError, "Parameter must be a callable.");
             return -1;
@@ -283,28 +338,34 @@ int        s_pyvpi_cbdata_setcallback(s_pyvpi_cbdata *self, PyObject *value, voi
 /* _pyvpi_cb_rtn(p_cb_data) :
  * Function for callback.
  */
-PLI_INT32 _pyvpi_cb_rtn(p_cb_data data)
+PLI_INT32 
+_pyvpi_cb_rtn(p_cb_data data)
 {
     PyObject *arglist;
-    int      blen = 0,nd_alloc = 0;
+    int      blen = 0,nd_alloc = 0;	
     //In this function, we must convert data to s_pyvpi_cbdata;
     p_pyvpi_cbdata self = (s_pyvpi_cbdata *) data->user_data;
     p_pyvpi_value  pv   = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
+	pyvpi_verbose(sprintf(print_buffer,"_pyvpi_cb_rtn in.\n"));
     //Return -1 if callback is not callback...
-    if (!PyCallable_Check(self->callback)) return -1;
+    if (!PyCallable_Check(self->callback)) {
+		pyvpi_error(sprintf(print_buffer,"callback is not callable!\n"));
+		return -1;
+	}
     
     //1. We must copy the tmp value to our struct...    
     //First, Check bit length if the value format is vpiVectorVal.
     if(data->value->format == vpiVectorVal) {
         blen = vpi_get(vpiSize,data->obj);
         pyvpi_CheckError();   //TBD Strange here...
-    }    
+    }
     pyvip_value_update_value(pv,data->value,blen); 
 
     //2. We must copy the tmp time to our struct...
     *(self->_vpi_cbdata.time) = *(data->time); //This will force change _Time object value.
-    arglist = Py_BuildValue("(O)",self);
+    arglist = Py_BuildValue("(O)",self);	
     (void) PyObject_CallObject(self->callback, arglist);
     Py_DECREF(arglist);
+	pyvpi_verbose(sprintf(print_buffer,"_pyvpi_cb_rtn out.\n"));
     return 0;
 }

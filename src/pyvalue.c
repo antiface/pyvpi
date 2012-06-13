@@ -5,7 +5,7 @@
 PyTypeObject pyvpi_value_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "pyvpi._Value",             /*tp_name*/
+    "pyvpi.Value",             /*tp_name*/
     sizeof(s_pyvpi_value),     /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)pyvpi_value_Dealloc, /*tp_dealloc*/    
@@ -47,7 +47,7 @@ PyTypeObject pyvpi_value_Type = {
 void pyvpi_value_Dealloc(p_pyvpi_value self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Value is release, "
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is release, "
 		"ptr is <0x%lx>.\n",self));
     if(self->obj != NULL) Py_XDECREF(self->obj);
     self->ob_type->tp_free((PyObject*)self);
@@ -69,7 +69,7 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
         return -1;
 	}
     Py_DECREF(self->obj);       //For inital, we need no object...
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Value is Initial, "
+    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is Initial, "
 									  "format is <0x%lx>.\n",self->_vpi_value.format));
     return update_format(self,self->_vpi_value.format,NULL);
 }
@@ -129,7 +129,7 @@ void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32
     PyObject*   dictobj;
 
     Py_INCREF(self->obj);
-    tmpobj = self->obj;
+    tmpobj = self->obj;	
     Py_DECREF(self->obj);
     self->obj = NULL;
     self->_vpi_value.format    = ovalp->format;
@@ -139,7 +139,7 @@ void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32
     case vpiOctStrVal:
     case vpiDecStrVal:
     case vpiHexStrVal:
-    case vpiStringVal:
+    case vpiStringVal:		
         if(self->obj == NULL)
             self->obj    = PyString_FromString(ovalp->value.str);
         self->_vpi_value.value.str = PyString_AsString(self->obj);

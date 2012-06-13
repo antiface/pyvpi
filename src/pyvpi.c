@@ -36,6 +36,20 @@ CheckError( void )
     return error_code;
 }
 
+static PyObject* 
+pyvpi_Print(PyObject *self, PyObject *args)
+{
+	PLI_BYTE8 *str;
+    if (!PyArg_ParseTuple(args, "s", &str))
+    {
+        PyErr_SetString(VpiError,  "Error args, must be (str).");
+        return NULL;
+    }
+	vpi_printf("%s",str);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 /* for obtaining handles */
 /*****************************************************************************
  * pyvpi_HandleByName()
@@ -48,13 +62,13 @@ pyvpi_HandleByName(PyObject *self, PyObject *args)
     PLI_BYTE8 *name;
     p_pyvpi_handle scope,oans;
     vpiHandle ans;
-    if (!PyArg_ParseTuple(args, "sO", &name,&scope))
+    if (!PyArg_ParseTuple(args, "s|O", &name,&scope))
     {
         PyErr_SetString(VpiError,  "Error args, must be (str,pyvpi.Handle).");
         return NULL;
     }
     if (!PyObject_TypeCheck(scope,&pyvpi_handle_Type)) {
-        pyvpi_trace(sprintf(print_buffer, "handleByName 's 2nd arg is "
+        pyvpi_debug(sprintf(print_buffer, "handleByName 's 2nd arg is "
                     "not pyvpi.Handle type, trade scope as NULL.\n"));
         ans = vpi_handle_by_name(name, NULL);
     }
@@ -65,8 +79,8 @@ pyvpi_HandleByName(PyObject *self, PyObject *args)
        return NULL;
 
     if(ans == NULL) {
-		Py_INCREF(Py_None);
-        return Py_None;
+		PyErr_Format(VpiError,  "Can't get right handle by name :\"%s\"!", name);
+		return NULL;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
     return (PyObject *)oans;
@@ -129,8 +143,8 @@ pyvpi_Handle(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
-		Py_INCREF(Py_None);
-        return Py_None;
+		PyErr_SetString(VpiError,  "");
+		return NULL;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
     return (PyObject *)oans;   
@@ -306,6 +320,7 @@ pyvpi_RegisterCb(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.CbData).");
         return NULL;
     }
+	Py_INCREF(cbdata);	/* Must incref the cb information */
     ans = vpi_register_cb(&cbdata->_vpi_cbdata);
     if(pyvpi_CheckError())
         return NULL;
@@ -319,27 +334,27 @@ pyvpi_RegisterCb(PyObject *self, PyObject *args)
 static PyObject* 
 pyvpi_RemoveCb(PyObject *self, PyObject *args)
 {
-    p_pyvpi_handle  cb_obj;
     p_pyvpi_cbdata  cbdata;
+	p_pyvpi_handle  cbhandle;
     PLI_INT32  ans;
-    if (!PyArg_ParseTuple(args, "O", &cb_obj))
+    if (!PyArg_ParseTuple(args, "O", &cbdata))
     {
-        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle|pyvpi.CbData).");
+        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.CbData).");
         return NULL;
     }
 
-    if (PyObject_TypeCheck(cb_obj,&pyvpi_cbdata_Type)) {
-        cbdata = (p_pyvpi_cbdata) cb_obj;
-        cb_obj = (p_pyvpi_handle) cbdata;
+    if (PyObject_TypeCheck(cbdata,&pyvpi_cbdata_Type)) {
+        cbhandle = (p_pyvpi_handle) cbdata->cb_h;
     }
-    else if (!PyObject_TypeCheck(cb_obj,&pyvpi_handle_Type)) {
-        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle|pyvpi.CbData).");
+    else {
+        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.CbData).");
         return NULL;
     }
-    ans = vpi_remove_cb(cb_obj->_vpi_handle);
-    cb_obj->is_free = 1;
+	ans = vpi_remove_cb(cbhandle->_vpi_handle);
+    cbhandle->is_free = 1;
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->Handle is "
-                    "release,ptr is <0x%lx>.\n", cb_obj->_vpi_handle));
+                    "release,ptr is <0x%lx>.\n", cbhandle->_vpi_handle));
+	Py_DECREF(cbdata);	/* Remove cbdata reference! */
     if(pyvpi_CheckError())
         return NULL;    
     return Py_BuildValue("i", ans);
@@ -352,6 +367,7 @@ pyvpi_GetCbInfo(PyObject *self, PyObject *args)
      //TBD
     pyvpi_warning(sprintf(print_buffer,"pyvpi.getCbInfo is not allowed "
                 "used in this version!\n"));
+	Py_INCREF(Py_None);
     return Py_None;
 //# p_pyvpi_handle  object,trgobj;
 //# p_pyvpi_cbdata  cbdata;
@@ -519,7 +535,8 @@ static PyMethodDef pyvpi_Methods[] = {
    {"removeCb",        pyvpi_RemoveCb,         METH_VARARGS,   "PLI_INT32  vpi_remove_cb       (vpiHandle cb_obj)."},
    {"getCbInfo",       pyvpi_GetCbInfo,        METH_VARARGS,   "void       vpi_get_cb_info     (vpiHandle object, <out>p_cb_data cb_data_p)."},
    {"registerSysTf",   pyvpi_RegisterSysTf,    METH_VARARGS,   "vpiHandle  vpi_register_systf  (p_systf_data systf_data_p)."},
-   {"getCbInfo",       pyvpi_GetSysTfInfo,     METH_VARARGS,   "void       vpi_get_systf_info  (vpiHandle object, <out>p_systf_data systf_data_p)."},
+   {"getSysTfInfo",    pyvpi_GetSysTfInfo,     METH_VARARGS,   "void       vpi_get_systf_info  (vpiHandle object, <out>p_systf_data systf_data_p)."},
+   {"printf",		   pyvpi_Print,			   METH_VARARGS,   "print function for vpi_printf"},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -651,11 +668,6 @@ void pyvpi_RegisterCallbacks (void)
 }
 
 //============================================================================
-PLI_INT32 pyvpi_printf()
-{
-    vpi_printf("...123...\n");
-    return 1;
-}
 PLI_INT32 pyvpi_test( PLI_BYTE8 *user_data )
 {
 	PyObject* py_fp = PyFile_FromString("test.py", "r");
@@ -666,6 +678,22 @@ PLI_INT32 pyvpi_test( PLI_BYTE8 *user_data )
 PLI_INT32 
 pyvpi_main( PLI_BYTE8 *user_data )
 {
+	vpiHandle self;
+	vpiHandle arg_iter;
+	vpiHandle arg;
+	s_vpi_value val;
+	PyObject* py_fp;
+
+	val.format = vpiStringVal;
+	self = vpi_handle(vpiSysTfCall,NULL);
+	arg_iter = vpi_iterate(vpiArgument,self);
+	arg =vpi_scan(arg_iter);
+	if(CheckError()) {
+		return -1;
+	}
+	vpi_get_value(arg,&val);
+	py_fp = PyFile_FromString(val.value.str, "r");
+	PyRun_SimpleFile(PyFile_AsFile(py_fp),val.value.str);
     return 0;
 }
 
@@ -679,7 +707,7 @@ pyvpi_main_check( PLI_BYTE8 *user_data )
 	PLI_INT32 re = 0;
 	self = vpi_handle(vpiSysTfCall,NULL);
 	arg_iter = vpi_iterate(vpiArgument,self);
-	if((re = CheckError()) && arg_iter){
+	if(!(re = CheckError()) && arg_iter){
 		while(arg =vpi_scan(arg_iter)){
 			if(re = CheckError())
 				break;
@@ -690,17 +718,21 @@ pyvpi_main_check( PLI_BYTE8 *user_data )
 				}
 				else {
 					pyvpi_fatal(sprintf(print_buffer,"The 1st of pyvpi_main must be a "
-						"path string which indicate a py file."));
+						"path string which indicate a py file.\n"));
 				}
 				break;
 			default :
 				pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only accept one"
-					" string arg."));
+					" string arg.\n"));
 				break;
 			}
 			index++;
 			vpi_free_object(arg);
 		}
+	}
+	if(index != 1) {
+		pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only/must accept one"
+					" string arg.\n"));
 	}
     return re;
 }
@@ -716,9 +748,9 @@ void pyvpi_RegisterTfs( void )
 
     systf_data.type        = vpiSysTask;
     systf_data.sysfunctype = 0;
-    systf_data.tfname      = "$test";
-    systf_data.calltf      = pyvpi_test;
-    systf_data.compiletf   = 0;
+    systf_data.tfname      = "$pyvpi_main";
+    systf_data.calltf      = pyvpi_main;
+    systf_data.compiletf   = pyvpi_main_check;
     systf_data.sizetf      = 0;
     systf_data.user_data   = 0;
     systf_handle = vpi_register_systf( &systf_data );

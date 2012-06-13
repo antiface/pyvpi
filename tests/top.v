@@ -151,13 +151,13 @@ module test;
     always #5 clk = ~clk;
     
     initial begin
-        $test();
+        $pyvpi_main("test.py");
         clk = 0;
         a   = 0;
         b   = 0;
         repeat(10) begin
         #5;
-        a = a +1;
+        a = a +1;        
         end
         $finish(0);
     end
