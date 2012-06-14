@@ -97,12 +97,12 @@ pyvpi_HandleByIndex(PyObject *self, PyObject *args)
     vpiHandle ans;
     if (!PyArg_ParseTuple(args, "Ok", &object,&indx))
     {
-        PyErr_SetString(VpiError,  "Error args, must be (long,pyvpi.Handle).");
+        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle,long).");
         return NULL;
     }
     if (!PyObject_TypeCheck(object,&pyvpi_handle_Type)) {
-        PyErr_SetString(VpiError,  "Error args, must be (long,pyvpi.Handle).");
-        return NULL; //TBD
+        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle,long).");
+        return NULL;
     }
     else {
         ans = vpi_handle_by_index(object->_vpi_handle,indx);
@@ -110,8 +110,8 @@ pyvpi_HandleByIndex(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
-		Py_INCREF(Py_None);
-        return Py_None;
+		PyErr_Format(VpiError,  "Can't get right handle by index : %d.", indx);
+        return NULL;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
     return (PyObject *)oans;  
@@ -143,7 +143,8 @@ pyvpi_Handle(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
-		PyErr_SetString(VpiError,  "");
+		PyErr_Format(VpiError,  "There is not relation between %d and <%lx>.",
+			type, refHandle);
 		return NULL;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -184,8 +185,9 @@ pyvpi_Iterate(PyObject *self, PyObject *args)
        return NULL;
 
     if(ans == NULL) {
-		Py_INCREF(Py_None);
-        return Py_None;
+		PyErr_Format(VpiError,  "Can't get right iterator in handle: <%lx>.",
+			refHandle);
+        return NULL;
     }
 
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -443,7 +445,7 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
     p_pyvpi_handle  handle,oans; 
     p_pyvpi_value   value;
     p_pyvpi_time    time = (p_pyvpi_time) Py_None;
-    PLI_INT32       flags = vpiNoDelay;
+    PLI_INT32       flags = vpiInertialDelay;
     vpiHandle       ans;
     if (!PyArg_ParseTuple(args, "OO|Oi", &handle, &value, &time, flags))
     {
@@ -454,9 +456,10 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, 1st arg must be pyvpi.Handle.");
         return NULL;
     }
-    if(Py_TYPE(value) != &pyvpi_value_Type) {    
-        PyErr_SetString(VpiError,  "Error args, 2nd arg must be pyvpi.Value.");
-        return NULL;
+    if(Py_TYPE(value) != &pyvpi_value_Type) {
+        pyvpi_debug(sprintf(print_buffer, "2nd arg of putValue is not pyvpi.Vaule, "
+                    "trade it as NULL"));
+        value = NULL;
     }
     if(Py_TYPE(time) != &pyvpi_time_Type) {    
         //PyErr_SetString(VpiError,  "Error args, 3nd arg must be pyvpi.Time.");
@@ -465,10 +468,14 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
                     "trade it as NULL"));
         time = NULL;
     }
-    ans = vpi_put_value(handle->_vpi_handle,&value->_vpi_value,&time->_vpi_time,flags);
+    ans = vpi_put_value(handle->_vpi_handle,
+		value == NULL? NULL : &value->_vpi_value,
+		time  == NULL? NULL : &time->_vpi_time,
+		flags);
     if(pyvpi_CheckError())
         return NULL;
     if(ans == NULL) {
+		Py_INCREF(Py_None);
         return Py_None;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -515,6 +522,18 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject* 
+pyvpi_Control(PyObject *self, PyObject *args)
+{
+    PLI_INT32 op;
+    if (!PyArg_ParseTuple(args, "k", &op))
+    {
+        PyErr_SetString(VpiError,  "Error args, must be (int).");
+        return NULL;
+    }   
+    return Py_BuildValue("i",vpi_control(op));    
+}
+
 static PyMethodDef pyvpi_Methods[] = {
    /* for obtaining handles */
    {"handleByName",    pyvpi_HandleByName,     METH_VARARGS,   "vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, vpiHandle scope)."},
@@ -537,6 +556,7 @@ static PyMethodDef pyvpi_Methods[] = {
    {"registerSysTf",   pyvpi_RegisterSysTf,    METH_VARARGS,   "vpiHandle  vpi_register_systf  (p_systf_data systf_data_p)."},
    {"getSysTfInfo",    pyvpi_GetSysTfInfo,     METH_VARARGS,   "void       vpi_get_systf_info  (vpiHandle object, <out>p_systf_data systf_data_p)."},
    {"printf",		   pyvpi_Print,			   METH_VARARGS,   "print function for vpi_printf"},
+   {"control",		   pyvpi_Control,		   METH_VARARGS,   "contorl"},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -668,13 +688,6 @@ void pyvpi_RegisterCallbacks (void)
 }
 
 //============================================================================
-PLI_INT32 pyvpi_test( PLI_BYTE8 *user_data )
-{
-	PyObject* py_fp = PyFile_FromString("test.py", "r");
-    PyRun_SimpleFile(PyFile_AsFile(py_fp),"test.py");
-    return 0;
-}
-
 PLI_INT32 
 pyvpi_main( PLI_BYTE8 *user_data )
 {

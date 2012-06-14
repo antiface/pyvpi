@@ -46,6 +46,20 @@ def test_pyeda() :
     #pyvpi.putValue(a,val)
     pyvpi.printf("%s %s\n" %  (val.value.vec,val.value.size))
 
+def test_index():
+    o = pyvpi.handleByName("test.o")
+    o_0 = pyvpi.handleByIndex(o,0)
+    pyvpi.printf("index : %s\n" % o_0)
+    o1 = pyvpi.handleByName("test.o[0]")
+    pyvpi.printf("index : %s\n" % o1)
+
+def test_iterate():
+    m = pyvpi.handleByName("test")
+    iter = pyvpi.iterate(cons.vpiReg,m)
+    reg = pyvpi.scan(iter)
+    while(reg) :
+        pyvpi.printf("reg : %s\n" % pyvpi.getStr(cons.vpiName,reg))
+        reg = pyvpi.scan(iter)
 
 def test_normal() :
     """
@@ -55,11 +69,14 @@ def test_normal() :
     cb = pyvpi.CbData(cons.cbValueChange,
                       trgobj = pyvpi.handleByName("test.o",0),
                       value  = pyvpi.Value(cons.vpiBinStrVal))
+    cb.user_data = 1
     def callback(arg):
-        pyvpi.printf("456\n")
-        pyvpi.printf("%s\n" % arg.value.value)
-        pyvpi.printf("%s\n" % arg.time.low)
+        pyvpi.printf("%s : " % arg.time.low)
+        pyvpi.printf("%s : " % arg.value.value)        
         pyvpi.printf("%s\n" % "callback is run...")
+        if cb.user_data == 3 :
+            pyvpi.removeCb(arg)
+        cb.user_data += 1
     cb.callback = callback
     pyvpi.registerCb(cb)
     # This function will case error, because this trgobj will be release twice.
@@ -81,5 +98,5 @@ if __name__ == '__main__'     :
     test_time()    
     test_normal()
     test_pyeda()
-    pyvpi.printf("123\n")
-    
+    test_index()
+    test_iterate()

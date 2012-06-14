@@ -143,6 +143,8 @@ module test;
     reg clk;
     reg [7:0] a,b;
     reg  [8:0] o;
+    reg  [7:0]  mem [0:16];
+    reg  [7:0]  mem1 [0:16][0:7];
     
     always @(*) begin
         o = a + b;
