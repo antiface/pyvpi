@@ -51,7 +51,6 @@ void pyvpi_handle_Dealloc(p_pyvpi_handle self)
     PyObject * _tmp_h;
     PyObject * key;
     int        cnt;
-    static     test = 0;
     //Free self.
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is release,ptr is <0x%lx>.\n",self));
     //Check this handle is exist or not;
@@ -75,7 +74,7 @@ void pyvpi_handle_Dealloc(p_pyvpi_handle self)
                     PyDict_DelItem(_HandleDict,key);
                     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->_vpi_handle is release,ptr is <0x%lx>.\n",
                     self->_vpi_handle));
-                    vpi_release_handle(self->_vpi_handle);
+                    vpi_free_object(self->_vpi_handle);
                 }
                 else {                
                     _tmp_h = PyInt_FromLong(cnt);

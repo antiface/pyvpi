@@ -13,6 +13,12 @@
 
 #include "pyvpi.h"
 
+#ifndef SVPI_TYPES
+#define SVPI_TYPES
+typedef int64_t	 		PLI_INT64;
+typedef uint64_t	 	PLI_UINT64;
+#endif
+
 extern PyTypeObject pyvpi_value_Type;
 extern PyTypeObject pyvpi_cbdata_Type;
 extern PyTypeObject pyvpi_time_Type;

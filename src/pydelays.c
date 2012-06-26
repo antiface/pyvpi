@@ -107,7 +107,6 @@ PyObject * s_pyvpi_delays_getdelays(s_pyvpi_delays *self, void *closure){
     return self->pdelays;
 }
 int        s_pyvpi_delays_setdelays(s_pyvpi_delays *self, PyObject *value, void *closure){
-    PyObject * tmp;
     int i;
     if (value == NULL || !PyTuple_Check(value)) {
         PyErr_SetString(VpiError, "Can't set delays to NULL/Non-Tuple.");
@@ -141,4 +140,5 @@ int        s_pyvpi_delays_setdelays(s_pyvpi_delays *self, PyObject *value, void 
         self->pdelays       =   value;
         self->_vpi_delay.no_of_delays  =   0;    
     }
+	return 0;
 }

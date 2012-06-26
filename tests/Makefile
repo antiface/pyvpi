@@ -50,4 +50,4 @@ vpi : $(SRC_C)
 	$(SRC_O)
 
 run :
-	vsim -c -do vsim.do test -pli $(DES_TARGET) -l vsim.log
+	vsim -c -do vsim.do test -pli $(DES_TARGET) -l vsim.log +pyvpi+start=start.py

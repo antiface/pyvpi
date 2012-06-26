@@ -60,7 +60,7 @@ static PyObject*
 pyvpi_HandleByName(PyObject *self, PyObject *args)
 {
     PLI_BYTE8 *name;
-    p_pyvpi_handle scope,oans;
+    p_pyvpi_handle scope = (p_pyvpi_handle)Py_None,oans;
     vpiHandle ans;
     if (!PyArg_ParseTuple(args, "s|O", &name,&scope))
     {
@@ -420,6 +420,7 @@ pyvpi_GetSysTfInfo(PyObject *self, PyObject *args)
     //There is no use to port this function;
     pyvpi_warning(sprintf(print_buffer,"pyvpi.getSysTfInfo is not allowed "
                  "used in this version!\n"));
+	Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -482,7 +483,7 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
     return (PyObject *)oans; 
 }
 
-static PyObject * 
+static PyObject *
 pyvpi_GetValue(PyObject *self, PyObject *args)
 {
     /*  Describe :
@@ -519,7 +520,37 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
     }
     vpi_get_value(handle->_vpi_handle,&value->_vpi_value);
 	pyvip_value_update_value(value,&value->_vpi_value,blen);
+	if(pyvpi_CheckError())
+        return NULL;
+	Py_INCREF(Py_None);
     return Py_None;
+}
+
+static PyObject *
+pyvpi_GetTime(PyObject *self, PyObject *args)
+{
+	p_pyvpi_handle  handle = (p_pyvpi_handle) Py_None;
+    p_pyvpi_time    time = (p_pyvpi_time) Py_None;
+	if (!PyArg_ParseTuple(args, "O|O", &time, &handle))
+    {
+        PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Time, pyvpi.Handle).");
+        return NULL;
+    }
+	if(Py_TYPE(time) != &pyvpi_time_Type) {
+		PyErr_SetString(VpiError,  "Error args, 1st arg must be pyvpi.Time.");
+        return NULL;
+	}
+	if(Py_TYPE(handle) != &pyvpi_handle_Type) {
+		vpi_get_time(0,&time->_vpi_time);
+	}
+	else 
+	{		
+		vpi_get_time(handle->_vpi_handle,&time->_vpi_time);
+	}
+	if(pyvpi_CheckError())
+        return NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyObject* 
@@ -570,6 +601,7 @@ static PyMethodDef pyvpi_Methods[] = {
    {"registerSysTf",   pyvpi_RegisterSysTf,    METH_VARARGS,   "vpiHandle  vpi_register_systf  (p_systf_data systf_data_p)."},
    {"getSysTfInfo",    pyvpi_GetSysTfInfo,     METH_VARARGS,   "void       vpi_get_systf_info  (vpiHandle object, <out>p_systf_data systf_data_p)."},
    {"printf",		   pyvpi_Print,			   METH_VARARGS,   "print function for vpi_printf"},
+   {"getTime",         pyvpi_GetTime,          METH_VARARGS,   "void       vpi_get_time      (p_vpi_time time,vpiHandle obj)."},
    {"control",		   pyvpi_Control,		   METH_VARARGS,   "contorl"},
    {"setDebugLevel",   pyvpi_SetDebugLevel,	   METH_VARARGS,   "set pyvpi debug print level."},
    {NULL, NULL, 0, NULL}        /* Sentinel */
@@ -675,11 +707,25 @@ PyMODINIT_FUNC initpyvpi(void)
 //============================================================================
 PLI_INT32 pyvpi_StartSim(p_cb_data cb_data_p)
 {
-    char *argv[]   =   {"-v"};
-    pyvpi_debug(sprintf(print_buffer,"python begin env initial.\n"));
-    Py_Initialize();
-    PySys_SetArgv(1,argv);
-	pyvpi_debug(sprintf(print_buffer,"python end env initial.\n"));
+	char *pyvpi_start =	"+pyvpi+start=";	//When this sim is start , execute what?
+	s_vpi_vlog_info info;
+	int i = 0;
+	char *p,*q;
+
+	vpi_get_vlog_info(&info);	
+	p = pyvpi_start;
+	for(i = 0; i<info.argc; i++) {
+		q = info.argv[i];
+		for(;*p != '\0' && *q != '0';p++,q++){
+			if(*p != *q) break;
+		}	
+		if(*p == '\0'){
+			PyObject* py_fp;
+			py_fp = PyFile_FromString(q, "r");
+			PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
+			break;
+		}
+	}
     return 0;
 }
 
@@ -771,8 +817,10 @@ pyvpi_main_check( PLI_BYTE8 *user_data )
  *****************************************************************************/
 void pyvpi_RegisterTfs( void )
 {
-    s_vpi_systf_data systf_data;
-    vpiHandle        systf_handle;
+    s_vpi_systf_data	systf_data;
+    vpiHandle			systf_handle;
+	char *argv[]     =	{"-v"};
+	char *pyvpi_load =	"+pyvpi+load=";	//When this lib is load , execute what?
 
     systf_data.type        = vpiSysTask;
     systf_data.sysfunctype = 0;
@@ -783,6 +831,34 @@ void pyvpi_RegisterTfs( void )
     systf_data.user_data   = 0;
     systf_handle = vpi_register_systf( &systf_data );
     vpi_free_object( systf_handle );
+
+	//We must initial Python here so we can use python register 
+	//System task and function.
+    pyvpi_debug(sprintf(print_buffer,"python begin env initial.\n"));
+    Py_Initialize();
+    PySys_SetArgv(1,argv);
+	pyvpi_debug(sprintf(print_buffer,"python end env initial.\n"));
+
+	{
+		s_vpi_vlog_info info;
+		int i = 0;
+		char *p,*q;
+
+		vpi_get_vlog_info(&info);	
+		p = pyvpi_load;
+		for(i = 0; i<info.argc; i++) {
+			q = info.argv[i];
+			for(;*p != '\0' && *q != '0';p++,q++){
+				if(*p != *q) break;
+			}	
+			if(*p == '\0'){
+				PyObject* py_fp;
+				py_fp = PyFile_FromString(q, "r");
+				PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
+				break;
+			}
+		}
+	}
 }
 
 /*****************************************************************************

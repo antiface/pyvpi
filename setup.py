@@ -17,10 +17,10 @@ MTI_HOME = ""
 VCS_HOME = ""
 
 #Try get modelsim/vcs home
-if os.environ.has_key("MTI_HOME") :
-    MTI_HOME = os.environ["MTI_HOME"]
-elif os.environ.has_key("VCS_HOME") :
+if os.environ.has_key("VCS_HOME") :
     VCS_HOME = os.environ['VCS_HOME']
+elif os.environ.has_key("MTI_HOME") :
+    MTI_HOME = os.environ["MTI_HOME"]
 else :
     for path in os.environ["PATH"].split(";") :
         if not os.path.lexists(path) :
@@ -40,11 +40,13 @@ if MTI_HOME :
     inc_dirs.append(os.path.join(MTI_HOME,"include"))
     if os.environ["OS"] == "Windows_NT" :
         lib_dirs.append(os.path.join(MTI_HOME,"win32"))
-    else :
-        lib_dirs.append(os.path.join(MTI_HOME,"linux"))
-    libs.append("mtipli")
+        libs.append("mtipli")
+        
 elif VCS_HOME :
-    pass
+    inc_dirs.append(os.path.join(VCS_HOME,"include"))
+    if os.environ["OS"] == "Windows_NT" :
+        # ToDo
+        pass
 else :
     print "Can't find variables : MTI_HOME, VCS_HOME."
     quit(0)

@@ -331,9 +331,11 @@ PLI_INT32 _calltf(PLI_BYTE8 *self)
     if(PyInt_Check(ans)){   //work with int,size,sizesigned function type.
         return PyInt_AsLong(ans);
     }
+	/* TDB
     if(PyFloat_Check(ans)){
         return PyFloat_AsDouble(ans);
     }
+	*/
     //What is time function???
     return 0;
 }
@@ -352,9 +354,11 @@ PLI_INT32 _compiletf(PLI_BYTE8 *self)
     if(PyInt_Check(ans)){
         return PyInt_AsLong(ans);
     }
+	/* TBD
     if(PyFloat_Check(ans)){
         return PyFloat_AsDouble(ans);
     }
+	*/
     //What is time function???
     return 0;
 }
@@ -373,9 +377,11 @@ PLI_INT32 _sizetf(PLI_BYTE8 *self)
     if(PyInt_Check(ans)){
         return PyInt_AsLong(ans);
     }
+	/* TBD
     if(PyFloat_Check(ans)){
         return PyFloat_AsDouble(ans);
     }
+	*/
     //What is time function???
     return 0;
 }
