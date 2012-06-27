@@ -53,20 +53,20 @@ void pyvpi_vector_Dealloc(p_pyvpi_vector self)
 int  pyvpi_vector_Init(s_pyvpi_vector *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"size","vec", NULL};
-	PyObject * tmpval = NULL;
+    PyObject * tmpval = NULL;
     self->size = 4*32;     //Default value.
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist,                                      
                                       &self->size,&tmpval))
         return -1;    
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is Initial,size is <0x%lx>.\n",self->size));
-	/*1. update vector size.*/	
+    /*1. update vector size.*/    
     if(pyvpi_vector_update_cache(self) != 0){
-		return -1;
-	}	
-	if(tmpval != NULL){
-		return s_pyvpi_vector_setvalue(self,tmpval,Py_None);
-	}
-	return 0;
+        return -1;
+    }    
+    if(tmpval != NULL){
+        return s_pyvpi_vector_setvalue(self,tmpval,Py_None);
+    }
+    return 0;
 }
 
 PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -84,7 +84,7 @@ PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is allocate,ptr is <0x%lx>, "
-		"type ptr is <0x%lx>.\n", self, type));
+        "type ptr is <0x%lx>.\n", self, type));
     return (PyObject *) self;
 }
 
@@ -182,7 +182,7 @@ int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *
     for(i = 0; i< numvals; i++){
         aval = 0;
         bval = 0;
-		if(i < vsize) { //Keep value didn't assgin zero.
+        if(i < vsize) { //Keep value didn't assgin zero.
             tpl = PyList_GetItem(value,i);
             if(PyTuple_Check(tpl)){
                 //If this is a tuple.
@@ -199,11 +199,11 @@ int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *
                 //If this is a integer.
                 aval = PyInt_AS_LONG(tpl);
             }
-			else {
-				PyErr_SetString(VpiError, "Can't set None (|int) to value.");
+            else {
+                PyErr_SetString(VpiError, "Can't set None (|int) to value.");
                 return -1;
-			}
-		}
+            }
+        }
         self->_vpi_vector[i].aval = aval;
         self->_vpi_vector[i].bval = bval;
     }

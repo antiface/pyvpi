@@ -19,8 +19,11 @@
 //  PLI_INT32 pulsere_flag;        /* true for pulsere values */
 //} s_vpi_delay, *p_vpi_delay;
 
-/* ------------------------------------------------------------------------- */
-//PyObject vpi delay struct data.
+/*****************************************************************************
+ * PyObject vpi delay struct data.
+ * For the strange vpi delays struct, we keep two time array, one for pdelays
+ * and the other for _vpi_delay.da ;
+ *****************************************************************************/
 typedef struct t_pyvpi_delays
 {
     PyObject_HEAD

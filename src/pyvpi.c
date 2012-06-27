@@ -1,4 +1,5 @@
 #include "pyvpi.h"
+#include <io.h>
 
 /*****************************************************************************
  * This is all code for python.
@@ -39,15 +40,15 @@ CheckError( void )
 static PyObject* 
 pyvpi_Print(PyObject *self, PyObject *args)
 {
-	PLI_BYTE8 *str;
+    PLI_BYTE8 *str;
     if (!PyArg_ParseTuple(args, "s", &str))
     {
         PyErr_SetString(VpiError,  "Error args, must be (str).");
         return NULL;
     }
-	vpi_printf("%s",str);
-	Py_INCREF(Py_None);
-	return Py_None;
+    vpi_printf("%s",str);
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 /* for obtaining handles */
@@ -79,8 +80,8 @@ pyvpi_HandleByName(PyObject *self, PyObject *args)
        return NULL;
 
     if(ans == NULL) {
-		PyErr_Format(VpiError,  "Can't get right handle by name :\"%s\"!", name);
-		return NULL;
+        PyErr_Format(VpiError,  "Can't get right handle by name :\"%s\"!", name);
+        return NULL;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
     return (PyObject *)oans;
@@ -110,7 +111,7 @@ pyvpi_HandleByIndex(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
-		PyErr_Format(VpiError,  "Can't get right handle by index : %d.", indx);
+        PyErr_Format(VpiError,  "Can't get right handle by index : %d.", indx);
         return NULL;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -143,9 +144,9 @@ pyvpi_Handle(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
-		PyErr_Format(VpiError,  "There is not relation between %d and <%lx>.",
-			type, refHandle);
-		return NULL;
+        PyErr_Format(VpiError,  "There is not relation between %d and <%lx>.",
+            type, refHandle);
+        return NULL;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
     return (PyObject *)oans;   
@@ -185,8 +186,8 @@ pyvpi_Iterate(PyObject *self, PyObject *args)
        return NULL;
 
     if(ans == NULL) {
-		PyErr_Format(VpiError,  "Can't get right iterator in handle: <%lx>.",
-			refHandle);
+        PyErr_Format(VpiError,  "Can't get right iterator in handle: <%lx>.",
+            refHandle);
         return NULL;
     }
 
@@ -222,7 +223,7 @@ pyvpi_Scan(PyObject *self, PyObject *args)
         pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->Handle is "
                     "release,ptr is <0x%lx>.\n", iterator->_vpi_handle));
         iterator->is_free = 1;
-		Py_INCREF(Py_None);
+        Py_INCREF(Py_None);
         return Py_None;
     }
     return (PyObject *)oans;   
@@ -322,7 +323,7 @@ pyvpi_RegisterCb(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.CbData).");
         return NULL;
     }
-	Py_INCREF(cbdata);	/* Must incref the cb information */
+    Py_INCREF(cbdata);    /* Must incref the cb information */
     ans = vpi_register_cb(&cbdata->_vpi_cbdata);
     if(pyvpi_CheckError())
         return NULL;
@@ -337,7 +338,7 @@ static PyObject*
 pyvpi_RemoveCb(PyObject *self, PyObject *args)
 {
     p_pyvpi_cbdata  cbdata;
-	p_pyvpi_handle  cbhandle;
+    p_pyvpi_handle  cbhandle;
     PLI_INT32  ans;
     if (!PyArg_ParseTuple(args, "O", &cbdata))
     {
@@ -352,13 +353,13 @@ pyvpi_RemoveCb(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.CbData).");
         return NULL;
     }
-	ans = vpi_remove_cb(cbhandle->_vpi_handle);
+    ans = vpi_remove_cb(cbhandle->_vpi_handle);
+    if(pyvpi_CheckError())
+        return NULL;
     cbhandle->is_free = 1;
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->Handle is "
                     "release,ptr is <0x%lx>.\n", cbhandle->_vpi_handle));
-	Py_DECREF(cbdata);	/* Remove cbdata reference! */
-    if(pyvpi_CheckError())
-        return NULL;    
+    Py_DECREF(cbdata);    /* Remove cbdata reference! */      
     return Py_BuildValue("i", ans);
 }
 
@@ -369,7 +370,7 @@ pyvpi_GetCbInfo(PyObject *self, PyObject *args)
      //TBD
     pyvpi_warning(sprintf(print_buffer,"pyvpi.getCbInfo is not allowed "
                 "used in this version!\n"));
-	Py_INCREF(Py_None);
+    Py_INCREF(Py_None);
     return Py_None;
 //# p_pyvpi_handle  object,trgobj;
 //# p_pyvpi_cbdata  cbdata;
@@ -401,7 +402,6 @@ pyvpi_RegisterSysTf(PyObject *self, PyObject *args)
 {
     s_pyvpi_systfdata*  systfdata;
     vpiHandle  ans;
-    p_pyvpi_handle oans; 
     if (!PyArg_ParseTuple(args, "O", &systfdata))
     {
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.SysTfData).");
@@ -410,8 +410,9 @@ pyvpi_RegisterSysTf(PyObject *self, PyObject *args)
     ans = vpi_register_systf(&systfdata->_vpi_systfdata);
     if(pyvpi_CheckError())
        return NULL;
-    oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
-    return (PyObject *)oans;   
+    Py_INCREF(systfdata); //Always increment systfdata.
+    Py_INCREF(Py_None);
+    return (PyObject *)Py_None;
 }
 
 static PyObject* 
@@ -420,7 +421,7 @@ pyvpi_GetSysTfInfo(PyObject *self, PyObject *args)
     //There is no use to port this function;
     pyvpi_warning(sprintf(print_buffer,"pyvpi.getSysTfInfo is not allowed "
                  "used in this version!\n"));
-	Py_INCREF(Py_None);
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -470,13 +471,13 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
         time = NULL;
     }
     ans = vpi_put_value(handle->_vpi_handle,
-		value == NULL? NULL : &value->_vpi_value,
-		time  == NULL? NULL : &time->_vpi_time,
-		flags);
+        value == NULL? NULL : &value->_vpi_value,
+        time  == NULL? NULL : &time->_vpi_time,
+        flags);
     if(pyvpi_CheckError())
         return NULL;
     if(ans == NULL) {
-		Py_INCREF(Py_None);
+        Py_INCREF(Py_None);
         return Py_None;
     }
     oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
@@ -491,7 +492,7 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
      * */
     p_pyvpi_handle  handle; 
     p_pyvpi_value   value;
-	PLI_UINT32		blen;
+    PLI_UINT32        blen;
     if (!PyArg_ParseTuple(args, "OO", &handle, &value))
     {
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle,pyvpi.Value).");
@@ -505,52 +506,52 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, 2nd arg must be pyvpi.Value.");
         return NULL;
     }
-	if(value->_vpi_value.format == vpiVectorVal) {
-		p_pyvpi_vector pvec;
+    if(value->_vpi_value.format == vpiVectorVal) {
+        p_pyvpi_vector pvec;
         blen = vpi_get(vpiSize,handle->_vpi_handle);
         if(pyvpi_CheckError()){
-			return NULL;
-		}
-		/* Update vetcotr cache to store the value.*/		
-		pvec = (p_pyvpi_vector) value->obj;
-		if(blen > pvec->size) {
-			pvec->size = blen;
-			pyvpi_vector_update_cache(pvec);
-		}
+            return NULL;
+        }
+        /* Update vetcotr cache to store the value.*/        
+        pvec = (p_pyvpi_vector) value->obj;
+        if(blen > pvec->size) {
+            pvec->size = blen;
+            pyvpi_vector_update_cache(pvec);
+        }
     }
     vpi_get_value(handle->_vpi_handle,&value->_vpi_value);
-	pyvip_value_update_value(value,&value->_vpi_value,blen);
-	if(pyvpi_CheckError())
+    pyvip_value_update_value(value,&value->_vpi_value,blen);
+    if(pyvpi_CheckError())
         return NULL;
-	Py_INCREF(Py_None);
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
 static PyObject *
 pyvpi_GetTime(PyObject *self, PyObject *args)
 {
-	p_pyvpi_handle  handle = (p_pyvpi_handle) Py_None;
+    p_pyvpi_handle  handle = (p_pyvpi_handle) Py_None;
     p_pyvpi_time    time = (p_pyvpi_time) Py_None;
-	if (!PyArg_ParseTuple(args, "O|O", &time, &handle))
+    if (!PyArg_ParseTuple(args, "O|O", &time, &handle))
     {
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Time, pyvpi.Handle).");
         return NULL;
     }
-	if(Py_TYPE(time) != &pyvpi_time_Type) {
-		PyErr_SetString(VpiError,  "Error args, 1st arg must be pyvpi.Time.");
+    if(Py_TYPE(time) != &pyvpi_time_Type) {
+        PyErr_SetString(VpiError,  "Error args, 1st arg must be pyvpi.Time.");
         return NULL;
-	}
-	if(Py_TYPE(handle) != &pyvpi_handle_Type) {
-		vpi_get_time(0,&time->_vpi_time);
-	}
-	else 
-	{		
-		vpi_get_time(handle->_vpi_handle,&time->_vpi_time);
-	}
-	if(pyvpi_CheckError())
+    }
+    if(Py_TYPE(handle) != &pyvpi_handle_Type) {
+        vpi_get_time(0,&time->_vpi_time);
+    }
+    else 
+    {        
+        vpi_get_time(handle->_vpi_handle,&time->_vpi_time);
+    }
+    if(pyvpi_CheckError())
         return NULL;
-	Py_INCREF(Py_None);
-	return Py_None;
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 static PyObject* 
@@ -574,8 +575,8 @@ pyvpi_SetDebugLevel(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "Error args, must be (int).");
         return NULL;
     }
-	print_level = new_level;
-	Py_INCREF(Py_None);
+    print_level = new_level;
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -600,10 +601,10 @@ static PyMethodDef pyvpi_Methods[] = {
    {"getCbInfo",       pyvpi_GetCbInfo,        METH_VARARGS,   "void       vpi_get_cb_info     (vpiHandle object, <out>p_cb_data cb_data_p)."},
    {"registerSysTf",   pyvpi_RegisterSysTf,    METH_VARARGS,   "vpiHandle  vpi_register_systf  (p_systf_data systf_data_p)."},
    {"getSysTfInfo",    pyvpi_GetSysTfInfo,     METH_VARARGS,   "void       vpi_get_systf_info  (vpiHandle object, <out>p_systf_data systf_data_p)."},
-   {"printf",		   pyvpi_Print,			   METH_VARARGS,   "print function for vpi_printf"},
+   {"printf",           pyvpi_Print,               METH_VARARGS,   "print function for vpi_printf"},
    {"getTime",         pyvpi_GetTime,          METH_VARARGS,   "void       vpi_get_time      (p_vpi_time time,vpiHandle obj)."},
-   {"control",		   pyvpi_Control,		   METH_VARARGS,   "contorl"},
-   {"setDebugLevel",   pyvpi_SetDebugLevel,	   METH_VARARGS,   "set pyvpi debug print level."},
+   {"control",           pyvpi_Control,           METH_VARARGS,   "contorl"},
+   {"setDebugLevel",   pyvpi_SetDebugLevel,       METH_VARARGS,   "set pyvpi debug print level."},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -707,25 +708,25 @@ PyMODINIT_FUNC initpyvpi(void)
 //============================================================================
 PLI_INT32 pyvpi_StartSim(p_cb_data cb_data_p)
 {
-	char *pyvpi_start =	"+pyvpi+start=";	//When this sim is start , execute what?
-	s_vpi_vlog_info info;
-	int i = 0;
-	char *p,*q;
+    char *pyvpi_start =    "+pyvpi+start=";    //When this sim is start , execute what?
+    s_vpi_vlog_info info;
+    int i = 0;
+    char *p,*q;
 
-	vpi_get_vlog_info(&info);	
-	p = pyvpi_start;
-	for(i = 0; i<info.argc; i++) {
-		q = info.argv[i];
-		for(;*p != '\0' && *q != '0';p++,q++){
-			if(*p != *q) break;
-		}	
-		if(*p == '\0'){
-			PyObject* py_fp;
-			py_fp = PyFile_FromString(q, "r");
-			PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
-			break;
-		}
-	}
+    vpi_get_vlog_info(&info);        
+    for(i = 0; i<info.argc; i++) {
+        q = info.argv[i];
+        p = pyvpi_start;
+        for(;*p != '\0' && *q != '\0';p++,q++){
+            if(*p != *q) break;
+        }    
+        if(*p == '\0'){
+            PyObject* py_fp;
+            py_fp = PyFile_FromString(q, "r");
+            PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
+            break;
+        }
+    }
     return 0;
 }
 
@@ -733,7 +734,7 @@ PLI_INT32 pyvpi_EndSim(p_cb_data cb_data_p)
 {
     pyvpi_debug(sprintf(print_buffer,"python begin env finalize.\n"));
     Py_Finalize();
-	pyvpi_debug(sprintf(print_buffer,"python end env finalize.\n"));
+    pyvpi_debug(sprintf(print_buffer,"python end env finalize.\n"));
     return 0;
 }
 /*****************************************************************************
@@ -752,62 +753,62 @@ void pyvpi_RegisterCallbacks (void)
 PLI_INT32 
 pyvpi_main( PLI_BYTE8 *user_data )
 {
-	vpiHandle self;
-	vpiHandle arg_iter;
-	vpiHandle arg;
-	s_vpi_value val;
-	PyObject* py_fp;
+    vpiHandle self;
+    vpiHandle arg_iter;
+    vpiHandle arg;
+    s_vpi_value val;
+    PyObject* py_fp;
 
-	val.format = vpiStringVal;
-	self = vpi_handle(vpiSysTfCall,NULL);
-	arg_iter = vpi_iterate(vpiArgument,self);
-	arg =vpi_scan(arg_iter);
-	if(CheckError()) {
-		return -1;
-	}
-	vpi_get_value(arg,&val);
-	py_fp = PyFile_FromString(val.value.str, "r");
-	PyRun_SimpleFile(PyFile_AsFile(py_fp),val.value.str);
+    val.format = vpiStringVal;
+    self = vpi_handle(vpiSysTfCall,NULL);
+    arg_iter = vpi_iterate(vpiArgument,self);
+    arg =vpi_scan(arg_iter);
+    if(CheckError()) {
+        return -1;
+    }
+    vpi_get_value(arg,&val);
+    py_fp = PyFile_FromString(val.value.str, "r");
+    PyRun_SimpleFile(PyFile_AsFile(py_fp),val.value.str);
     return 0;
 }
 
 PLI_INT32 
 pyvpi_main_check( PLI_BYTE8 *user_data )
 {
-	vpiHandle self;
-	vpiHandle arg_iter;
-	vpiHandle arg;
-	PLI_INT32 index = 0;
-	PLI_INT32 re = 0;
-	self = vpi_handle(vpiSysTfCall,NULL);
-	arg_iter = vpi_iterate(vpiArgument,self);
-	if(!(re = CheckError()) && arg_iter){
-		while(arg =vpi_scan(arg_iter)){
-			if(re = CheckError())
-				break;
-			switch(index){
-			case 0 :
-				if(vpi_get(vpiType,arg) == vpiConstant &&
-					vpi_get(vpiConstType,arg) == vpiStringConst){
-				}
-				else {
-					pyvpi_fatal(sprintf(print_buffer,"The 1st of pyvpi_main must be a "
-						"path string which indicate a py file.\n"));
-				}
-				break;
-			default :
-				pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only accept one"
-					" string arg.\n"));
-				break;
-			}
-			index++;
-			vpi_free_object(arg);
-		}
-	}
-	if(index != 1) {
-		pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only/must accept one"
-					" string arg.\n"));
-	}
+    vpiHandle self;
+    vpiHandle arg_iter;
+    vpiHandle arg;
+    PLI_INT32 index = 0;
+    PLI_INT32 re = 0;
+    self = vpi_handle(vpiSysTfCall,NULL);
+    arg_iter = vpi_iterate(vpiArgument,self);
+    if(!(re = CheckError()) && arg_iter){
+        while(arg =vpi_scan(arg_iter)){
+            if(re = CheckError())
+                break;
+            switch(index){
+            case 0 :
+                if(vpi_get(vpiType,arg) == vpiConstant &&
+                    vpi_get(vpiConstType,arg) == vpiStringConst){
+                }
+                else {
+                    pyvpi_fatal(sprintf(print_buffer,"The 1st of pyvpi_main must be a "
+                        "path string which indicate a py file.\n"));
+                }
+                break;
+            default :
+                pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only accept one"
+                    " string arg.\n"));
+                break;
+            }
+            index++;
+            vpi_free_object(arg);
+        }
+    }
+    if(index != 1) {
+        pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only/must accept one"
+                    " string arg.\n"));
+    }
     return re;
 }
 
@@ -817,10 +818,10 @@ pyvpi_main_check( PLI_BYTE8 *user_data )
  *****************************************************************************/
 void pyvpi_RegisterTfs( void )
 {
-    s_vpi_systf_data	systf_data;
-    vpiHandle			systf_handle;
-	char *argv[]     =	{"-v"};
-	char *pyvpi_load =	"+pyvpi+load=";	//When this lib is load , execute what?
+    s_vpi_systf_data    systf_data;
+    vpiHandle            systf_handle;
+    char *argv[]     =    {"-v"};
+    char *pyvpi_load =    "+pyvpi+load=";    //When this lib is load , execute what?
 
     systf_data.type        = vpiSysTask;
     systf_data.sysfunctype = 0;
@@ -832,33 +833,42 @@ void pyvpi_RegisterTfs( void )
     systf_handle = vpi_register_systf( &systf_data );
     vpi_free_object( systf_handle );
 
-	//We must initial Python here so we can use python register 
-	//System task and function.
+    //We must initial Python here so we can use python register 
+    //System task and function.
     pyvpi_debug(sprintf(print_buffer,"python begin env initial.\n"));
     Py_Initialize();
     PySys_SetArgv(1,argv);
-	pyvpi_debug(sprintf(print_buffer,"python end env initial.\n"));
+    pyvpi_debug(sprintf(print_buffer,"python end env initial.\n"));
 
-	{
-		s_vpi_vlog_info info;
-		int i = 0;
-		char *p,*q;
+    {
+        s_vpi_vlog_info info;
+        int i = 0;
+        char *p,*q;
 
-		vpi_get_vlog_info(&info);	
-		p = pyvpi_load;
-		for(i = 0; i<info.argc; i++) {
-			q = info.argv[i];
-			for(;*p != '\0' && *q != '0';p++,q++){
-				if(*p != *q) break;
-			}	
-			if(*p == '\0'){
-				PyObject* py_fp;
-				py_fp = PyFile_FromString(q, "r");
-				PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
-				break;
-			}
-		}
-	}
+        vpi_get_vlog_info(&info);            
+        for(i = 0; i<info.argc; i++) {
+            q = info.argv[i];
+            p = pyvpi_load;
+            for(;*p != '\0' && *q != '\0';p++,q++){
+                if(*p != *q) break;
+            }
+            if(*p == '\0') break;
+        }
+        if(*p == '\0'){
+            //Pass load filename from args
+            PyObject* py_fp;
+            py_fp = PyFile_FromString(q, "r");
+            PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
+        }
+        else {
+            //Default pyvpi load file.
+            if(access("pyvpi.load",0) == 0) {
+                PyObject* py_fp;
+                py_fp = PyFile_FromString("pyvpi.load", "r");
+                PyRun_SimpleFile(PyFile_AsFile(py_fp),"pyvpi.load");
+            }
+        }
+    }
 }
 
 /*****************************************************************************

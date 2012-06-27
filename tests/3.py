@@ -19,3 +19,7 @@ for reg in getAllHandles(mod,cons.vpiReg) :
 pyvpi.printf("All nets are blew here :\n")    
 for net in getAllHandles(mod,cons.vpiNet) :
     pyvpi.printf("%s\n" % (pyvpi.getStr(cons.vpiFullName,net)))
+
+time = pyvpi.Time()
+pyvpi.getTime(time)
+pyvpi.printf("%s\n" %(time.low))

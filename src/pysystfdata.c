@@ -69,7 +69,7 @@ void pyvpi_systfdata_Dealloc(p_pyvpi_systfdata self)
     Py_XDECREF(self->compiletf);
     Py_XDECREF(self->sizetf);
     pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is release, "
-									  "ptr is <0x%lx>.\n",self));
+                                      "ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -142,7 +142,7 @@ int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwd
             return -1;
     } 
     pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is Initial, "
-		"type is <0x%lx>.\n",self->_vpi_systfdata.type));
+        "type is <0x%lx>.\n",self->_vpi_systfdata.type));
     return 0;
 }
 
@@ -150,7 +150,7 @@ PyObject * pyvpi_systfdata_New(PyTypeObject *type, PyObject *args, PyObject *kwd
 {   
     p_pyvpi_systfdata self = (p_pyvpi_systfdata)type->tp_alloc(type, 0);
     pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is allocate,ptr is <0x%lx>, "
-		"type ptr is <0x%lx>.\n",self,type));
+        "type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 
@@ -215,7 +215,7 @@ int        s_pyvpi_systfdata_setsysfunctype(s_pyvpi_systfdata *self, PyObject *v
         else {
             PyErr_SetString(VpiError,
                             "The value must be vpi[Int,Real,Time,Sized,"
-							"SizedSigned]Func when type is vpiSysFunc.");
+                            "SizedSigned]Func when type is vpiSysFunc.");
             return -1;
         }
     }
@@ -331,11 +331,11 @@ PLI_INT32 _calltf(PLI_BYTE8 *self)
     if(PyInt_Check(ans)){   //work with int,size,sizesigned function type.
         return PyInt_AsLong(ans);
     }
-	/* TDB
+    /* TDB
     if(PyFloat_Check(ans)){
         return PyFloat_AsDouble(ans);
     }
-	*/
+    */
     //What is time function???
     return 0;
 }
@@ -354,11 +354,11 @@ PLI_INT32 _compiletf(PLI_BYTE8 *self)
     if(PyInt_Check(ans)){
         return PyInt_AsLong(ans);
     }
-	/* TBD
+    /* TBD
     if(PyFloat_Check(ans)){
         return PyFloat_AsDouble(ans);
     }
-	*/
+    */
     //What is time function???
     return 0;
 }
@@ -377,11 +377,11 @@ PLI_INT32 _sizetf(PLI_BYTE8 *self)
     if(PyInt_Check(ans)){
         return PyInt_AsLong(ans);
     }
-	/* TBD
+    /* TBD
     if(PyFloat_Check(ans)){
         return PyFloat_AsDouble(ans);
     }
-	*/
+    */
     //What is time function???
     return 0;
 }

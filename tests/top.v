@@ -149,7 +149,7 @@ module test;
     always #5 clk = ~clk;
     
     initial begin
-        $pyvpi_main("3.py");
+        $pyvpi_main("5.py");
         clk = 0;
         a   = 0;
         b   = 0;

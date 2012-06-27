@@ -47,7 +47,7 @@ void pyvpi_strengthval_Dealloc(p_pyvpi_strengthval self)
 {
     //Free self.
     pyvpi_verbose(sprintf(print_buffer, "pyvpi._Strengthval is release, "
-		"ptr is <0x%lx>.\n",self));
+        "ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -67,6 +67,6 @@ PyObject * pyvpi_strengthval_New(PyTypeObject *type, PyObject *args, PyObject *k
 {
     p_pyvpi_strengthval self = (p_pyvpi_strengthval)type->tp_alloc(type, 0);
     pyvpi_verbose(sprintf(print_buffer, "pyvpi._Strengthval is allocate,ptr is <0x%lx>, "
-		"type ptr is <0x%lx>.\n",self,type));
+        "type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }

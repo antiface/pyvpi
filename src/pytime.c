@@ -57,13 +57,13 @@ int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds)
     self->_vpi_time.type = vpiSimTime; //Default value.
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,                                      
                                       &self->_vpi_time.type))
-	{
-		PyErr_SetString(VpiError, "The pyvpi.Time initial args must be "
-			"(type = int).");
+    {
+        PyErr_SetString(VpiError, "The pyvpi.Time initial args must be "
+            "(type = int).");
         return -1;
-	}
+    }
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is Initial,type is <0x%lx>.\n",
-		self->_vpi_time.type));
+        self->_vpi_time.type));
     return 0;
 }
 
@@ -71,6 +71,6 @@ PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_time self = (p_pyvpi_time)type->tp_alloc(type, 0);
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is allocate, "
-									  "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
+                                      "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }

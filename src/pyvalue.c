@@ -48,7 +48,7 @@ void pyvpi_value_Dealloc(p_pyvpi_value self)
 {
     //Free self.
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is release, "
-		"ptr is <0x%lx>.\n",self));
+        "ptr is <0x%lx>.\n",self));
     if(self->obj != NULL) Py_XDECREF(self->obj);
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -63,14 +63,14 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
     self->_vpi_value.value.str = PyString_AsString(self->obj);
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
                                       &self->_vpi_value.format))
-	{
-		PyErr_SetString(VpiError, "The pyvpi.Value initial args must be "
-			"(format = int).");
+    {
+        PyErr_SetString(VpiError, "The pyvpi.Value initial args must be "
+            "(format = int).");
         return -1;
-	}
+    }
     Py_DECREF(self->obj);       //For inital, we need no object...
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is Initial, "
-									  "format is <0x%lx>.\n",self->_vpi_value.format));
+                                      "format is <0x%lx>.\n",self->_vpi_value.format));
     return update_format(self,self->_vpi_value.format,NULL);
 }
 
@@ -84,7 +84,7 @@ PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_INCREF(Py_None);
     self-> obj = Py_None;
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is allocate, "
-									  "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
+                                      "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
 
@@ -129,7 +129,7 @@ void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32
     PyObject*   dictobj;
 
     Py_INCREF(self->obj);
-    tmpobj = self->obj;	
+    tmpobj = self->obj;    
     Py_DECREF(self->obj);
     self->obj = NULL;
     self->_vpi_value.format    = ovalp->format;
@@ -139,7 +139,7 @@ void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32
     case vpiOctStrVal:
     case vpiDecStrVal:
     case vpiHexStrVal:
-    case vpiStringVal:		
+    case vpiStringVal:        
         if(self->obj == NULL)
             self->obj    = PyString_FromString(ovalp->value.str);
         self->_vpi_value.value.str = PyString_AsString(self->obj);
@@ -168,7 +168,7 @@ void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32
             pvector->_vpi_vector[i].aval = ovalp->value.vector[i].aval;
             pvector->_vpi_vector[i].bval = ovalp->value.vector[i].bval;
         }
-		self->_vpi_value.value.vector = pvector->_vpi_vector;
+        self->_vpi_value.value.vector = pvector->_vpi_vector;
         break;
     case vpiStrengthVal:
         self->obj    = pyvpi_strengthval_New(&pyvpi_strengthval_Type,PyTuple_New(0),PyDict_New());
@@ -298,11 +298,11 @@ static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* 
         /* not sure what to do here? */
     case vpiObjTypeVal: case vpiSuppressVal:
         break;
-	default :
-		PyErr_SetString(VpiError,"The format of pyvpi.Value must be "
-			"vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,Vector,"
-			"Strength,Suppress,Time,ObjType]Val");
-		return -1;
+    default :
+        PyErr_SetString(VpiError,"The format of pyvpi.Value must be "
+            "vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,Vector,"
+            "Strength,Suppress,Time,ObjType]Val");
+        return -1;
     }
     return 0;
 }
