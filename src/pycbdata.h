@@ -7,6 +7,10 @@
 #include "sv_vpi_user.h"
 
 #include "pyconfig.h"
+#include "pytime.h"
+#include "pyhandle.h"
+#include "pyvalue.h"
+
 //typedef struct t_cb_data
 //{
 //  PLI_INT32    reason;                        /* callback reason */

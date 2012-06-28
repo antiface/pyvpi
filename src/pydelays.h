@@ -7,6 +7,9 @@
 #include "sv_vpi_user.h"
 
 #include "pyconfig.h"
+#include "pytime.h"
+#include "pyhandle.h"
+
 //typedef struct t_vpi_delay
 //{
 //  struct t_vpi_time *da;         /* pointer to user allocated array of

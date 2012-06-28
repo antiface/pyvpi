@@ -5,6 +5,7 @@ import glob
 import os
 import os.path
 import sys
+import platform
 
 #All c source
 c_src = glob.glob(os.path.join("src","*.c"))
@@ -38,13 +39,13 @@ else :
 #update include/libs dirs.
 if MTI_HOME :
     inc_dirs.append(os.path.join(MTI_HOME,"include"))
-    if os.environ["OS"] == "Windows_NT" :
+    if platform.system() == "Windows" :
         lib_dirs.append(os.path.join(MTI_HOME,"win32"))
         libs.append("mtipli")
         
 elif VCS_HOME :
     inc_dirs.append(os.path.join(VCS_HOME,"include"))
-    if os.environ["OS"] == "Windows_NT" :
+    if platform.system() == "Windows" :
         # ToDo
         pass
 else :
@@ -62,6 +63,6 @@ setup(name = '',
                                c_src,
                                include_dirs = inc_dirs,
                                library_dirs = lib_dirs,
-                               libraries = libs
+                               libraries = libs,
                                )]
       )

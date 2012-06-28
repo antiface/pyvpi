@@ -7,6 +7,11 @@
 #include "sv_vpi_user.h"
 
 #include "pyconfig.h"
+#include "pyvector.h"
+#include "pytime.h"
+#include "pystrength.h"
+#include "pyhandle.h"
+
 //typedef struct t_vpi_value
 //{
 //  PLI_INT32 format; /* vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,

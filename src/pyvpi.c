@@ -1,5 +1,9 @@
 #include "pyvpi.h"
+#ifdef WIN32
 #include <io.h>
+#else
+#include <sys/io.h>
+#endif
 
 /*****************************************************************************
  * This is all code for python.
@@ -12,7 +16,7 @@
  * and, if so, set VpiError and return error code.
  *****************************************************************************/
 int 
-pyvpi_CheckError( void )
+pyvpi_CheckError(void)
 {
     int              error_code;
     s_vpi_error_info error_info;
@@ -25,7 +29,7 @@ pyvpi_CheckError( void )
 }
 
 static int 
-CheckError( void )
+CheckError(void)
 {
     int              error_code;
     s_vpi_error_info error_info;
@@ -492,7 +496,7 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
      * */
     p_pyvpi_handle  handle; 
     p_pyvpi_value   value;
-    PLI_UINT32        blen;
+    PLI_UINT32        blen = 0;
     if (!PyArg_ParseTuple(args, "OO", &handle, &value))
     {
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle,pyvpi.Value).");
@@ -710,21 +714,22 @@ PLI_INT32 pyvpi_StartSim(p_cb_data cb_data_p)
 {
     char *pyvpi_start =    "+pyvpi+start=";    //When this sim is start , execute what?
     s_vpi_vlog_info info;
-    int i = 0;
-    char *p,*q;
 
-    vpi_get_vlog_info(&info);        
-    for(i = 0; i<info.argc; i++) {
-        q = info.argv[i];
-        p = pyvpi_start;
-        for(;*p != '\0' && *q != '\0';p++,q++){
-            if(*p != *q) break;
-        }    
-        if(*p == '\0'){
-            PyObject* py_fp;
-            py_fp = PyFile_FromString(q, "r");
-            PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
-            break;
+    if(vpi_get_vlog_info(&info)){
+        int i = 0;
+        char *p,*q;
+        for(i = 0; i<info.argc; i++) {
+            q = info.argv[i];
+            p = pyvpi_start;
+            for(;*p != '\0' && *q != '\0';p++,q++){
+                if(*p != *q) break;
+            }    
+            if(*p == '\0'){
+                PyObject* py_fp;
+                py_fp = PyFile_FromString(q, "r");
+                PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
+                break;
+            }
         }
     }
     return 0;
@@ -842,23 +847,24 @@ void pyvpi_RegisterTfs( void )
 
     {
         s_vpi_vlog_info info;
-        int i = 0;
-        char *p,*q;
 
-        vpi_get_vlog_info(&info);            
-        for(i = 0; i<info.argc; i++) {
-            q = info.argv[i];
-            p = pyvpi_load;
-            for(;*p != '\0' && *q != '\0';p++,q++){
-                if(*p != *q) break;
+        if(vpi_get_vlog_info(&info)){   //First try to get vlog info.
+            int i = 0;
+            char *p,*q;
+            for(i = 0; i<info.argc; i++) {
+                q = info.argv[i];
+                p = pyvpi_load;
+                for(;*p != '\0' && *q != '\0';p++,q++){
+                    if(*p != *q) break;
+                }
+                if(*p == '\0') break;
             }
-            if(*p == '\0') break;
-        }
-        if(*p == '\0'){
-            //Pass load filename from args
-            PyObject* py_fp;
-            py_fp = PyFile_FromString(q, "r");
-            PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
+            if(*p == '\0'){
+                //Pass load filename from args
+                PyObject* py_fp;
+                py_fp = PyFile_FromString(q, "r");
+                PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
+            }
         }
         else {
             //Default pyvpi load file.
