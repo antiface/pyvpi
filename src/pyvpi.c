@@ -279,7 +279,7 @@ pyvpi_Get64(PyObject *self, PyObject *args)
     ans = vpi_get(property,object->_vpi_handle);
     if(pyvpi_CheckError())
        return NULL;        
-    return Py_BuildValue("l", ans); //signed long int python object.
+    return Py_BuildValue("L", ans); //signed long int python object.
 }
 
 static PyObject* 
@@ -609,16 +609,24 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
 {
     p_pyvpi_handle   handle;
     PLI_INT32   format;
+#ifdef __LP64__
     PLI_UINT64  saddr;  //void* point.
     PLI_UINT64  eaddr;  //void* point.
+#else
+    PLI_UINT32  saddr;  //void* point.
+    PLI_UINT32  eaddr;  //void* point.
+#endif
     p_pyvpi_value  value;
     
     PLI_UINT32   cache_size;  //vector,string buffer.
   //PLI_UINT32   value_size;  //value size.
   //PLI_UINT32   size;        //total size.
     unsigned int i;
-
+#ifdef __LP64__
+    if (!PyArg_ParseTuple(args, "OiKK",&handle,&format,&saddr,&eaddr)){
+#else
     if (!PyArg_ParseTuple(args, "Oikk",&handle,&format,&saddr,&eaddr)){
+#endif
         PyErr_SetString(VpiError,  "Error args, must be (Handle,format(int), saddr(int),eaddr(int)).");
         return NULL;
     }
@@ -626,11 +634,9 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
         PyErr_SetString(VpiError,  "1st arg must be Handle.");
         return NULL;
     }
-    
-    saddr = (saddr/PYVPI_ALIGN) * PYVPI_ALIGN + PYVPI_ALIGN;  //Align 8 bytes.
-
+    saddr = ((saddr-1)/PYVPI_ALIGN + 1) * PYVPI_ALIGN;
     //value_size = sizeof(s_pyvpi_value);
-    //value_size = (value_size/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
+    //value_size = (value_size/PYVPI_ALIGN + 1) * PYVPI_ALIGN;
     //size = value_size;
 
     /* Calc other object size. */
@@ -645,10 +651,10 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
         cache_size = vpi_get(vpiSize,((p_pyvpi_handle)handle)->_vpi_handle) + 1;        
         if(pyvpi_CheckError())
             return NULL;
-        /* In order to keep vector at size < 8, we must align by 8 
-           byte(sizeof(s_vpi_vecval)).
+        /* In order to keep vector at size < 8, cache_size must big equal than 8;
          */
-        cache_size = (cache_size/sizeof(s_vpi_vecval)) * (sizeof(s_vpi_vecval) + 1);
+        if(cache_size < 8)
+            cache_size = 8;
         //size += cache_size;
         break;
     case vpiScalarVal:
@@ -656,13 +662,13 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
     case vpiRealVal:
     case vpiStrengthVal:
         /*
-        cache_size = (sizeof(s_pyvpi_strengthval)/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
+        cache_size = (sizeof(s_pyvpi_strengthval)/PYVPI_ALIGN + 1) * PYVPI_ALIGN;
         size += cache_size;
         break;
         */
     case vpiTimeVal:
         /*
-        cache_size = (sizeof(s_pyvpi_time)/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
+        cache_size = (sizeof(s_pyvpi_time)/PYVPI_ALIGN + 1) * PYVPI_ALIGN;
         size += cache_size;
         break;
         */
@@ -683,10 +689,10 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
     }
 
     if(saddr + cache_size >eaddr) {
-        PyErr_SetString(VpiError,  "Can't alloc enough buffer between saddr and eaddr.");
+        PyErr_Format(VpiError,  "Can't alloc enough buffer(%d) between saddr(%d) and eaddr(%d).",
+            cache_size,saddr,eaddr);
         return NULL;
     }
-
     /* Do memory initial. */
     for(i = 0; i < cache_size;i++){
         *(char *)(saddr + i) = 0;
@@ -758,8 +764,12 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
         return NULL;
     */
     }
-    saddr += cache_size;
+    saddr += cache_size;    
+#ifdef __LP64__
+    return Py_BuildValue("(OK)",value,saddr);
+#else
     return Py_BuildValue("(Ok)",value,saddr);
+#endif
 }
 
 static PyMethodDef pyvpi_Methods[] = {

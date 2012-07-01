@@ -151,7 +151,7 @@ module test;
         $monitor("%0d : %b + %b = %b .",$time,a,b,o);
     end
     initial begin
-        $pyvpi_main("4.py");
+        $pyvpi_main("6.py");
         clk = 0;
         a   = 0;
         b   = 0;

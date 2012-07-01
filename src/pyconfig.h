@@ -15,7 +15,11 @@ typedef int64_t          PLI_INT64;
 typedef uint64_t         PLI_UINT64;
 #endif
 
+#ifdef __LP64__
 #define PYVPI_ALIGN 8
+#else
+#define PYVPI_ALIGN 4
+#endif
 
 extern PyTypeObject pyvpi_value_Type;
 extern PyTypeObject pyvpi_cbdata_Type;
