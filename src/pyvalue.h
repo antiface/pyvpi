@@ -2,6 +2,7 @@
 #define __PYVALUE_H__
 #include "Python.h"
 #include "structmember.h"
+#include "string.h"
 
 #include "vpi_user.h"
 #include "sv_vpi_user.h"
@@ -33,8 +34,12 @@
 typedef struct t_pyvpi_value
 {
     PyObject_HEAD
-    s_vpi_value  _vpi_value;      //struct vpi time.
-    PyObject*    obj;
+    s_vpi_value  _vpi_value;        //struct vpi time.
+    PyObject*    obj;               //maybe time,vector,strength.
+    p_pyvpi_handle fixed_handle;    /*  If this value is used to fixed handle,
+                                        keep this handle. Only used for mmap.
+                                     */
+    PLI_INT32   cache_size;         // per byte.
 } s_pyvpi_value, *p_pyvpi_value;
 
 extern void pyvpi_value_Dealloc(p_pyvpi_value self);

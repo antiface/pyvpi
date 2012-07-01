@@ -27,17 +27,23 @@ extern void pyvpi_time_Dealloc(p_pyvpi_time self);
 extern int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds);
 extern PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
+//Get/Set Functions ......
+//value
+PyObject * s_pyvpi_time_gettime(s_pyvpi_time *self, void *closure);
+
 static PyMethodDef  pyvpi_time_methods[] = {
     {NULL}
 };
 static PyMemberDef pyvpi_time_members[]  = {
     {"type",  T_INT,    offsetof(s_pyvpi_time, _vpi_time.type), 0, "time type[vpiScaledRealTime, vpiSimTime,vpiSuppressTime]"},
     {"high",  T_UINT,   offsetof(s_pyvpi_time, _vpi_time.high), 0, "high bits for vpiSimTime"},
-    {"low",   T_UINT,   offsetof(s_pyvpi_time, _vpi_time.low), 0, "low bits for vpiSimTime"},
+    {"low",   T_UINT,   offsetof(s_pyvpi_time, _vpi_time.low), 0, "low bits for vpiSimTime"},    
     {"real",  T_DOUBLE, offsetof(s_pyvpi_time, _vpi_time.real), 0, "real time for vpiScaledRealTime"},
     {NULL}
 };
 static PyGetSetDef pyvpi_time_getsets[]  = {
+    {"time", (getter)s_pyvpi_time_gettime, 
+    NULL,"get time.",NULL},
     {NULL}
 };
 #endif

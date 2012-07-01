@@ -8,7 +8,7 @@
 //   
 // ----------------------------------
 
-`timescale 1ns / 1ns
+`timescale 1ns / 1ps
 
 module top ( ain );
 inout [3:0] ain;
@@ -147,16 +147,19 @@ module test;
     assign o = a + b;
     
     always #5 clk = ~clk;
-    
     initial begin
-        $pyvpi_main("5.py");
+        $monitor("%0d : %b + %b = %b .",$time,a,b,o);
+    end
+    initial begin
+        $pyvpi_main("4.py");
         clk = 0;
         a   = 0;
         b   = 0;
-        repeat(5) begin
+        repeat(5) begin        
         #5;
-        a = a +1;
+        a = a +1;        
         end
+        #100000;
         $finish(0);
     end
 endmodule

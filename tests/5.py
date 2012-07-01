@@ -12,7 +12,7 @@ port = 9999
 
 s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 s.connect((host,port))
-trgobj=pyvpi.handleByName("test.o",0)
+trgobj=pyvpi.handleByName("test.clk",0)
 cb = pyvpi.CbData(trgobj=trgobj)
 val = pyvpi.Value()
 cb.reason = cons.cbValueChange

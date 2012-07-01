@@ -1,4 +1,6 @@
 #include "pycbdata.h"
+#include "pyvpi.h"
+
 //Type define here.
 PyTypeObject pyvpi_cbdata_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -121,7 +123,7 @@ pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
 
     /* Initial cbdata's time  */
     if(ptime == NULL) {
-        ptime = (p_pyvpi_time) pyvpi_time_New(&pyvpi_time_Type,Py_None,PyDict_New());
+        ptime = (p_pyvpi_time) pyvpi_time_New(&pyvpi_time_Type,DumbTuple,DumbDict);
         pyvpi_time_Init(ptime,Py_None,Py_None);
     }
     else if(Py_TYPE(ptime) == &pyvpi_time_Type) {
@@ -313,7 +315,7 @@ s_pyvpi_cbdata_setindex(s_pyvpi_cbdata *self, PyObject *value, void *closure)
 //callback
 PyObject * 
 s_pyvpi_cbdata_getcallback(s_pyvpi_cbdata *self, void *closure)
-{   
+{
     if(self->callback == NULL) {
         Py_INCREF(Py_None);
         return Py_None;
@@ -355,10 +357,18 @@ _pyvpi_cb_rtn(p_cb_data data)
     //1. We must copy the tmp value to our struct...    
     //First, Check bit length if the value format is vpiVectorVal.
     if(data->value->format == vpiVectorVal) {
-        blen = vpi_get(vpiSize,data->obj);
-        pyvpi_CheckError();   //TBD Strange here...
+        if(pv->fixed_handle == NULL) {
+            blen = vpi_get(vpiSize,data->obj);
+            if(pyvpi_CheckError()) {
+                return -1;
+            }
+        }
+        else {
+            /* For fixed handle value size is unchange_able */
+            blen = ((p_pyvpi_vector)pv->obj)->size;
+        }
     }
-    pyvip_value_update_value(pv,data->value,blen); 
+    pyvip_value_update_value(pv,data->value,blen);
 
     //2. We must copy the tmp time to our struct...
     *(self->_vpi_cbdata.time) = *(data->time); //This will force change _Time object value.

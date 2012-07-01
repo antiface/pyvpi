@@ -1,21 +1,21 @@
 #ifndef __PYVPI_CONFIG__
 #define __PYVPI_CONFIG__
-
-#define PYVPI_DEBUG
-
-//#include "pyvector.h"
-//#include "pytime.h"
-//#include "pystrength.h"
-//#include "pyhandle.h"
-//#include "pyvalue.h"
-//#include "pycbdata.h"
-//#include "pysystfdata.h"
-
+/*
+    Type           ILP64   LP64   LLP64<32BIT>
+    char              8      8       8
+    short            16     16      16
+    int              64     32      32
+    long             64     64      32
+    long long        64     64      64
+    pointer          64     64      64
+*/
 #ifndef SVPI_TYPES
 #define SVPI_TYPES
-typedef int64_t             PLI_INT64;
+typedef int64_t          PLI_INT64;
 typedef uint64_t         PLI_UINT64;
 #endif
+
+#define PYVPI_ALIGN 8
 
 extern PyTypeObject pyvpi_value_Type;
 extern PyTypeObject pyvpi_cbdata_Type;
@@ -26,9 +26,16 @@ extern PyTypeObject pyvpi_handle_Type;
 extern PyTypeObject pyvpi_delays_Type;
 extern PyTypeObject pyvpi_systfdata_Type;
 
+/*
+    Python other modules type;
+ */
+
 //Extern pyobject.
 PyObject *VpiError;
 PyObject *PyError;
+PyObject *DumbTuple;
+PyObject *DumbDict;
+
 
 //Common use print macro.
 #define PRINT_VERBOSE   10

@@ -19,7 +19,7 @@ typedef struct t_pyvpi_vector
     PyObject_HEAD
     s_vpi_vecval  *_vpi_vector; //struct vpi vector point.
     PLI_UINT32  size;
-    PLI_UINT32  cache_size;      //Cache size, used to store s_vpi_vecval vector,unit is sizeof(s_vpi_vecval)-> 32bit
+    PLI_UINT32  cache_size;      //Cache size, used to store s_vpi_vecval vector,unit is sizeof(s_vpi_vecval)-> 64bit
     p_vpi_vecval cache_ptr;    
 } s_pyvpi_vector, *p_pyvpi_vector;
 

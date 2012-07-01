@@ -8,12 +8,12 @@ b = handleByName("test.b")
 def callback(self) :
     getValue(self.user_data[0],self.user_data[2])
     getValue(self.user_data[1],self.user_data[3])
-    printf("%s : %s(a) + %s(b) = %s(o)\n" % (self.time.low,
+    printf("%s : %s(a) + %s(b) = %s(o)\n" % (self.time.time,
         self.user_data[2].value,
         self.user_data[3].value,
-        self.value.value))
+        self.value.value.vec))
         
-cb = CbData(trgobj = o,callback = callback, value = Value(cons.vpiBinStrVal))
+cb = CbData(trgobj = o,callback = callback, value = Value(cons.vpiVectorVal))
 cb.user_data = [a,b,Value(),Value()]
 registerCb(cb)
 

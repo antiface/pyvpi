@@ -1,9 +1,4 @@
 #include "pyvpi.h"
-#ifdef WIN32
-#include <io.h>
-#else
-#include <sys/io.h>
-#endif
 
 /*****************************************************************************
  * This is all code for python.
@@ -284,7 +279,7 @@ pyvpi_Get64(PyObject *self, PyObject *args)
     ans = vpi_get(property,object->_vpi_handle);
     if(pyvpi_CheckError())
        return NULL;        
-    return Py_BuildValue("I", ans);
+    return Py_BuildValue("l", ans); //signed long int python object.
 }
 
 static PyObject* 
@@ -378,8 +373,8 @@ pyvpi_GetCbInfo(PyObject *self, PyObject *args)
     return Py_None;
 //# p_pyvpi_handle  object,trgobj;
 //# p_pyvpi_cbdata  cbdata;
-//# PyObject*       pdict = PyDict_New();
-//# PyObject*       ptpl = PyTuple_New(0);
+//# PyObject*       pdict = DumbDict;
+//# PyObject*       ptpl = DumbTuple;
 //# if (!PyArg_ParseTuple(args, "O", &object))
 //# {
 //#     PyErr_SetString(VpiError,  "Error args, must be (pyvpi._vpiHandle).");
@@ -496,7 +491,7 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
      * */
     p_pyvpi_handle  handle; 
     p_pyvpi_value   value;
-    PLI_UINT32        blen = 0;
+    PLI_UINT32      blen = 0;
     if (!PyArg_ParseTuple(args, "OO", &handle, &value))
     {
         PyErr_SetString(VpiError,  "Error args, must be (pyvpi.Handle,pyvpi.Value).");
@@ -508,6 +503,11 @@ pyvpi_GetValue(PyObject *self, PyObject *args)
     }
     if(Py_TYPE(value) != &pyvpi_value_Type) {    
         PyErr_SetString(VpiError,  "Error args, 2nd arg must be pyvpi.Value.");
+        return NULL;
+    }
+    if(value->fixed_handle != NULL && 
+        value->fixed_handle->_vpi_handle != handle->_vpi_handle){
+        PyErr_SetString(VpiError,  "Can't put different handle value to fixed handle pyvpi.Value.");
         return NULL;
     }
     if(value->_vpi_value.format == vpiVectorVal) {
@@ -584,6 +584,175 @@ pyvpi_SetDebugLevel(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+/*
+    \brief createValueFromMMap
+    @input   :
+        handle :    value for store handle.
+        format :    value format.
+        saddr  :    buffer start addr.
+        eaddr  :    buffer end addr.
+    @return  :
+        (Value,newsaddr)  : the new Value object and the new saddr.
+    In some suituation,the value size always keep unchangeable,these values only used
+    the same handles, so we can swap value fastly by this previlege between process 
+    by mmap.
+    |----------|-----------|-----------------------|
+    sa  value       oval   na       rest           ea
+    sa      : saddr;
+    value   : value object;
+    oval    : like string buffer,vector,time object;
+    na      : newsaddr;
+    da      : eaddr.
+ */
+static PyObject*
+pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
+{
+    p_pyvpi_handle   handle;
+    PLI_INT32   format;
+    PLI_UINT64  saddr;  //void* point.
+    PLI_UINT64  eaddr;  //void* point.
+    p_pyvpi_value  value;
+    
+    PLI_UINT32   cache_size;  //vector,string buffer.
+    PLI_UINT32   value_size;  //value size.
+    PLI_UINT32   size;        //total size.
+    unsigned int i;
+
+    if (!PyArg_ParseTuple(args, "Oikk",&handle,&format,&saddr,&eaddr)){
+        PyErr_SetString(VpiError,  "Error args, must be (Handle,format(int), saddr(int),eaddr(int)).");
+        return NULL;
+    }
+    if(Py_TYPE(handle) != &pyvpi_handle_Type) {
+        PyErr_SetString(VpiError,  "1st arg must be Handle.");
+        return NULL;
+    }
+    
+    saddr = (saddr/PYVPI_ALIGN) * PYVPI_ALIGN + PYVPI_ALIGN;  //Align 8 bytes.
+
+    value_size = sizeof(s_pyvpi_value);
+    value_size = (value_size/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
+    size = value_size;
+
+    /* Calc other object size. */
+    switch (format) {
+    /* all string values */
+    case vpiBinStrVal:
+    case vpiOctStrVal:
+    case vpiDecStrVal:
+    case vpiHexStrVal:
+    case vpiStringVal:
+    case vpiScalarVal:
+    case vpiIntVal:
+    case vpiRealVal:
+    case vpiVectorVal:
+        cache_size = vpi_get(vpiSize,((p_pyvpi_handle)handle)->_vpi_handle) + 1;        
+        if(pyvpi_CheckError())
+            return NULL;
+        /* In order to keep vector at size < 8, we must align by 8 
+           byte(sizeof(s_vpi_vecval)).
+         */
+        cache_size = (cache_size/sizeof(s_vpi_vecval)) * (sizeof(s_vpi_vecval) + 1);
+        size += cache_size;
+        break;
+    case vpiStrengthVal:
+        cache_size = (sizeof(s_pyvpi_strengthval)/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
+        size += cache_size;
+        break;
+    case vpiTimeVal:
+        cache_size = (sizeof(s_pyvpi_time)/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
+        size += cache_size;
+        break;
+    case vpiObjTypeVal: case vpiSuppressVal:
+        PyErr_SetString(VpiError,"The format of pyvpi.Value not "
+            "support vpiObjTypeVal and vpiSuppressVal."
+            );
+        return NULL;
+    default :
+        PyErr_SetString(VpiError,"The format of pyvpi.Value must be "
+            "vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,Vector,"
+            "Strength,Suppress,Time,ObjType]Val.");
+        return NULL;
+    }
+
+    if(saddr + size >eaddr) {
+        PyErr_SetString(VpiError,  "Can't alloc enough buffer between saddr and eaddr.");
+        return NULL;
+    }
+
+    /* Do memory initial. */
+    for(i = 0; i < size;i++){
+        *(char *)(saddr + i) = 0;
+    }
+
+    /* Initial value in buffer. */
+    value = (p_pyvpi_value) saddr;
+    PyObject_Init((PyObject *)value,&pyvpi_value_Type);
+    value->_vpi_value.format = format;
+
+    /* Update saddr point buffer address */
+    saddr += value_size;
+    /*
+        Do value initial.
+     */
+    Py_INCREF(handle);
+    value->fixed_handle = handle;
+    value->cache_size   = cache_size;
+        switch (format) {
+    /* all string values */
+    case vpiBinStrVal:
+    case vpiOctStrVal:
+    case vpiDecStrVal:
+    case vpiHexStrVal:
+    case vpiStringVal:        
+        value->obj    = PyString_FromString("");
+        value->_vpi_value.value.str = (char *) saddr;
+        break;
+    case vpiScalarVal:
+        value->obj    = PyInt_FromLong(vpi0);        
+        break;
+    case vpiIntVal:
+        value->obj    = PyInt_FromLong(0);
+        break;
+    case vpiRealVal:
+        value->obj    = PyFloat_FromDouble(0.0);
+        break;
+    case vpiVectorVal:
+        /* For vector, we only use saddr to store vpi_vector struct,not for p_pyvpi_vector.*/
+        value->obj    = pyvpi_vector_New(&pyvpi_vector_Type,DumbTuple,DumbDict);
+        pyvpi_vector_Init((p_pyvpi_vector)value->obj,DumbTuple,DumbDict);
+        ((p_pyvpi_vector)value->obj)->size = vpi_get(vpiSize,((p_pyvpi_handle)handle)->_vpi_handle);
+        ((p_pyvpi_vector)value->obj)->cache_size = cache_size/sizeof(s_vpi_vecval);
+        free(((p_pyvpi_vector)value->obj)->cache_ptr);
+        ((p_pyvpi_vector)value->obj)->cache_ptr = (p_vpi_vecval) saddr;
+        ((p_pyvpi_vector)value->obj)->_vpi_vector = (p_vpi_vecval) saddr;
+        value->_vpi_value.value.vector = (p_vpi_vecval) saddr;
+        break;
+    case vpiStrengthVal:
+        value->obj    = (PyObject *) saddr;
+        PyObject_Init(value->obj,&pyvpi_strengthval_Type);
+        value->_vpi_value.value.strength = &((p_pyvpi_strengthval)value->obj)->_vpi_strengthval;
+        break;
+    case vpiTimeVal:
+        value->obj    = (PyObject *) saddr;
+        PyObject_Init(value->obj,&pyvpi_time_Type);
+        value->_vpi_value.value.time = &((p_pyvpi_time)value->obj)->_vpi_time;
+        break;
+        /* not sure what to do here? */
+    case vpiObjTypeVal: case vpiSuppressVal:
+        PyErr_SetString(VpiError,"The format of pyvpi.Value not "
+            "support vpiObjTypeVal and vpiSuppressVal."
+            );
+        return NULL;
+    default :
+        PyErr_SetString(VpiError,"The format of pyvpi.Value must be "
+            "vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,Vector,"
+            "Strength,Suppress,Time,ObjType]Val.");
+        return NULL;
+    }
+    saddr += cache_size;
+    return Py_BuildValue("(Ok)",value,saddr);
+}
+
 static PyMethodDef pyvpi_Methods[] = {
    /* for obtaining handles */
    {"handleByName",    pyvpi_HandleByName,     METH_VARARGS,   "vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, vpiHandle scope)."},
@@ -605,10 +774,12 @@ static PyMethodDef pyvpi_Methods[] = {
    {"getCbInfo",       pyvpi_GetCbInfo,        METH_VARARGS,   "void       vpi_get_cb_info     (vpiHandle object, <out>p_cb_data cb_data_p)."},
    {"registerSysTf",   pyvpi_RegisterSysTf,    METH_VARARGS,   "vpiHandle  vpi_register_systf  (p_systf_data systf_data_p)."},
    {"getSysTfInfo",    pyvpi_GetSysTfInfo,     METH_VARARGS,   "void       vpi_get_systf_info  (vpiHandle object, <out>p_systf_data systf_data_p)."},
-   {"printf",           pyvpi_Print,               METH_VARARGS,   "print function for vpi_printf"},
+   {"printf",          pyvpi_Print,            METH_VARARGS,   "print function for vpi_printf"},
    {"getTime",         pyvpi_GetTime,          METH_VARARGS,   "void       vpi_get_time      (p_vpi_time time,vpiHandle obj)."},
-   {"control",           pyvpi_Control,           METH_VARARGS,   "contorl"},
-   {"setDebugLevel",   pyvpi_SetDebugLevel,       METH_VARARGS,   "set pyvpi debug print level."},
+   {"control",         pyvpi_Control,          METH_VARARGS,   "contorl"},
+   /* -- Utils functions --*/
+   {"setDebugLevel",        pyvpi_SetDebugLevel,       METH_VARARGS,   "set pyvpi debug print level."},
+   {"createValueFromMMap",  pyvpi_CreateValueFromMMap, METH_VARARGS,   "crete value from buffer."},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -690,6 +861,9 @@ PyMODINIT_FUNC initpyvpi(void)
     Py_INCREF(PyError);
     PyModule_AddObject(m, "PyError", PyError);
     
+    DumbTuple   =   PyTuple_New(0);
+    DumbDict    =   PyDict_New();    
+
     //Add user type.
     Py_INCREF(&pyvpi_value_Type);
     PyModule_AddObject(m, "Value", (PyObject *)&pyvpi_value_Type);

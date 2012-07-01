@@ -6,7 +6,14 @@
 #include "vpi_user.h"
 #include "sv_vpi_user.h"
 
+#ifdef MS_WINDOWS
+#include <io.h>
+#else
+#include <sys/io.h>
+#endif
+
 #include "pyconfig.h"
+
 #include "pyvector.h"
 #include "pytime.h"
 #include "pystrength.h"

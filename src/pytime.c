@@ -74,3 +74,11 @@ PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
                                       "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
     return (PyObject *) self;
 }
+
+
+PyObject * s_pyvpi_time_gettime(s_pyvpi_time *self, void *closure)
+{   
+    long long time = self->_vpi_time.high;
+    time = (time<< 32) + self->_vpi_time.low;
+    return Py_BuildValue("k",time);
+}
