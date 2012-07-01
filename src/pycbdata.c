@@ -106,8 +106,8 @@ pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
 
     /* Initial cbdata's value field. */
     if(pvalue == NULL) {
-        pvalue = (p_pyvpi_value) pyvpi_value_New(&pyvpi_value_Type,Py_None,Py_None);
-        pyvpi_value_Init(pvalue,Py_None,Py_None);
+        pvalue = (p_pyvpi_value) pyvpi_value_New(&pyvpi_value_Type,DumbTuple,DumbDict);
+        pyvpi_value_Init(pvalue,DumbTuple,DumbDict);
     }
     else if(Py_TYPE(pvalue) ==  &pyvpi_value_Type){
         Py_INCREF(pvalue);
@@ -126,7 +126,7 @@ pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
     /* Initial cbdata's time  */
     if(ptime == NULL) {
         ptime = (p_pyvpi_time) pyvpi_time_New(&pyvpi_time_Type,DumbTuple,DumbDict);
-        pyvpi_time_Init(ptime,Py_None,Py_None);
+        pyvpi_time_Init(ptime,DumbTuple,DumbDict);
     }
     else if(Py_TYPE(ptime) == &pyvpi_time_Type) {
         Py_INCREF(ptime);

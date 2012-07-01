@@ -614,8 +614,8 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
     p_pyvpi_value  value;
     
     PLI_UINT32   cache_size;  //vector,string buffer.
-    PLI_UINT32   value_size;  //value size.
-    PLI_UINT32   size;        //total size.
+  //PLI_UINT32   value_size;  //value size.
+  //PLI_UINT32   size;        //total size.
     unsigned int i;
 
     if (!PyArg_ParseTuple(args, "Oikk",&handle,&format,&saddr,&eaddr)){
@@ -629,9 +629,9 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
     
     saddr = (saddr/PYVPI_ALIGN) * PYVPI_ALIGN + PYVPI_ALIGN;  //Align 8 bytes.
 
-    value_size = sizeof(s_pyvpi_value);
-    value_size = (value_size/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
-    size = value_size;
+    //value_size = sizeof(s_pyvpi_value);
+    //value_size = (value_size/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
+    //size = value_size;
 
     /* Calc other object size. */
     switch (format) {
@@ -641,9 +641,6 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
     case vpiDecStrVal:
     case vpiHexStrVal:
     case vpiStringVal:
-    case vpiScalarVal:
-    case vpiIntVal:
-    case vpiRealVal:
     case vpiVectorVal:
         cache_size = vpi_get(vpiSize,((p_pyvpi_handle)handle)->_vpi_handle) + 1;        
         if(pyvpi_CheckError())
@@ -652,16 +649,27 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
            byte(sizeof(s_vpi_vecval)).
          */
         cache_size = (cache_size/sizeof(s_vpi_vecval)) * (sizeof(s_vpi_vecval) + 1);
-        size += cache_size;
+        //size += cache_size;
         break;
+    case vpiScalarVal:
+    case vpiIntVal:
+    case vpiRealVal:
     case vpiStrengthVal:
+        /*
         cache_size = (sizeof(s_pyvpi_strengthval)/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
         size += cache_size;
         break;
+        */
     case vpiTimeVal:
+        /*
         cache_size = (sizeof(s_pyvpi_time)/PYVPI_ALIGN) * (PYVPI_ALIGN + 1);
         size += cache_size;
         break;
+        */
+        PyErr_SetString(VpiError,"The createValueFromMMap don't support"
+            "vpiScalarVal,vpiIntVal,vpiRealVal,vpiStrengthVal,vpiTimeVal!"
+            );
+        return NULL;
     case vpiObjTypeVal: case vpiSuppressVal:
         PyErr_SetString(VpiError,"The format of pyvpi.Value not "
             "support vpiObjTypeVal and vpiSuppressVal."
@@ -674,23 +682,21 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    if(saddr + size >eaddr) {
+    if(saddr + cache_size >eaddr) {
         PyErr_SetString(VpiError,  "Can't alloc enough buffer between saddr and eaddr.");
         return NULL;
     }
 
     /* Do memory initial. */
-    for(i = 0; i < size;i++){
+    for(i = 0; i < cache_size;i++){
         *(char *)(saddr + i) = 0;
     }
 
     /* Initial value in buffer. */
-    value = (p_pyvpi_value) saddr;
-    PyObject_Init((PyObject *)value,&pyvpi_value_Type);
-    value->_vpi_value.format = format;
-
-    /* Update saddr point buffer address */
-    saddr += value_size;
+    value = (p_pyvpi_value)pyvpi_value_Type.tp_alloc(&pyvpi_value_Type, 0);
+    if(value == NULL)
+        return NULL;
+    value->_vpi_value.format = format;       
     /*
         Do value initial.
      */
@@ -703,10 +709,11 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
     case vpiOctStrVal:
     case vpiDecStrVal:
     case vpiHexStrVal:
-    case vpiStringVal:        
+    case vpiStringVal:
         value->obj    = PyString_FromString("");
         value->_vpi_value.value.str = (char *) saddr;
         break;
+    /* Don't support!
     case vpiScalarVal:
         value->obj    = PyInt_FromLong(vpi0);        
         break;
@@ -716,6 +723,7 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
     case vpiRealVal:
         value->obj    = PyFloat_FromDouble(0.0);
         break;
+    */
     case vpiVectorVal:
         /* For vector, we only use saddr to store vpi_vector struct,not for p_pyvpi_vector.*/
         value->obj    = pyvpi_vector_New(&pyvpi_vector_Type,DumbTuple,DumbDict);
@@ -727,6 +735,7 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
         ((p_pyvpi_vector)value->obj)->_vpi_vector = (p_vpi_vecval) saddr;
         value->_vpi_value.value.vector = (p_vpi_vecval) saddr;
         break;
+    /* Don't support.
     case vpiStrengthVal:
         value->obj    = (PyObject *) saddr;
         PyObject_Init(value->obj,&pyvpi_strengthval_Type);
@@ -736,8 +745,7 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
         value->obj    = (PyObject *) saddr;
         PyObject_Init(value->obj,&pyvpi_time_Type);
         value->_vpi_value.value.time = &((p_pyvpi_time)value->obj)->_vpi_time;
-        break;
-        /* not sure what to do here? */
+        break;    
     case vpiObjTypeVal: case vpiSuppressVal:
         PyErr_SetString(VpiError,"The format of pyvpi.Value not "
             "support vpiObjTypeVal and vpiSuppressVal."
@@ -748,6 +756,7 @@ pyvpi_CreateValueFromMMap(PyObject *self, PyObject *args)
             "vpi[[Bin,Oct,Dec,Hex]Str,Scalar,Int,Real,String,Vector,"
             "Strength,Suppress,Time,ObjType]Val.");
         return NULL;
+    */
     }
     saddr += cache_size;
     return Py_BuildValue("(Ok)",value,saddr);

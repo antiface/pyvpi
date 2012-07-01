@@ -104,6 +104,7 @@ PyObject * s_pyvpi_value_getvalue(s_pyvpi_value *self, void *closure)
            self->_vpi_value.format == vpiStringVal) {
             self->obj = PyString_FromString(self->_vpi_value.value.str);
         }
+        /*
         else if(self->_vpi_value.format == vpiScalarVal) {
             self->obj = PyInt_FromLong(self->_vpi_value.value.scalar);
         }
@@ -112,7 +113,7 @@ PyObject * s_pyvpi_value_getvalue(s_pyvpi_value *self, void *closure)
         }
         else if(self->_vpi_value.format == vpiRealVal){
              self->obj    = PyFloat_FromDouble(self->_vpi_value.value.real);
-        }
+        }*/
         else {
             PyErr_SetString(VpiError, "pyvpi inner error occur when string value return!");
             return NULL;
