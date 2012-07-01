@@ -20,8 +20,8 @@ PyTypeObject pyvpi_cbdata_Type = {
     0,                         /*tp_hash */
     0,                         /*tp_call*/
     0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
+    PyObject_GenericGetAttr,   /*tp_getattro*/
+    PyObject_GenericSetAttr,   /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
     "pyvpi cbdata objects",     /* tp_doc */
@@ -38,7 +38,7 @@ PyTypeObject pyvpi_cbdata_Type = {
     0,                         /* tp_dict */
     0,                         /* tp_descr_get */
     0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
+    offsetof(s_pyvpi_cbdata, dict),    /* tp_dictoffset */
     (initproc) pyvpi_cbdata_Init,      /* tp_init */
     0,                         /* tp_alloc */
     pyvpi_cbdata_New,           /* tp_new */
@@ -55,6 +55,8 @@ pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
     ptime  = (p_pyvpi_time)  ((size_t)self->_vpi_cbdata.time - offsetof(s_pyvpi_time, _vpi_time));
     Py_DECREF(ptime);    
     Py_DECREF(self->obj_h);
+    Py_XDECREF(self->user_data);
+    Py_XDECREF(self->dict);
     pyvpi_verbose(sprintf(print_buffer, "pyvpi.CbData is release,ptr is <0x%lx>.\n",self));
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -169,6 +171,7 @@ pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->cb_h = Py_None;    //Initial callback handle none.
     Py_INCREF(Py_None);
     self->user_data = Py_None;    //user_data
+    self->dict = PyDict_New();
     Py_INCREF(Py_None);
     self->callback = Py_None;
     if(!self){

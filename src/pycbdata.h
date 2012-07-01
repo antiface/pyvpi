@@ -31,7 +31,8 @@ typedef struct t_pyvpi_cbdata
     PyObject *callback;             //Callback object
     PyObject *obj_h;                //Object handle
     PyObject *cb_h;                 //Callback return handle
-    PyObject *user_data;            //User Object handle   
+    PyObject *user_data;            //User Object handle
+    PyObject *dict;
 } s_pyvpi_cbdata, *p_pyvpi_cbdata;
 
 //Method ...
