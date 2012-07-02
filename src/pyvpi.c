@@ -68,8 +68,8 @@ pyvpi_HandleByName(PyObject *self, PyObject *args)
         return NULL;
     }
     if (!PyObject_TypeCheck(scope,&pyvpi_handle_Type)) {
-        pyvpi_debug(sprintf(print_buffer, "handleByName 's 2nd arg is "
-                    "not pyvpi.Handle type, trade scope as NULL.\n"));
+        pyvpi_debug("handleByName 's 2nd arg is "
+                    "not pyvpi.Handle type, trade scope as NULL.\n");
         ans = vpi_handle_by_name(name, NULL);
     }
     else {
@@ -173,8 +173,8 @@ pyvpi_Iterate(PyObject *self, PyObject *args)
         return NULL;
     }
     if (!PyObject_TypeCheck(refHandle, &pyvpi_handle_Type)) {
-        pyvpi_trace(sprintf(print_buffer, "iterate 's 2nd arg is "
-                    "not pyvpi.Handle type, trade refHandle as NULL.\n"));
+        pyvpi_trace("iterate 's 2nd arg is "
+                    "not pyvpi.Handle type, trade refHandle as NULL.\n");
         ans = vpi_iterate(type, NULL);
     }
     else {
@@ -219,8 +219,8 @@ pyvpi_Scan(PyObject *self, PyObject *args)
         oans = (p_pyvpi_handle) _pyvpi_handle_New(ans);
     }
     else {
-        pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->Handle is "
-                    "release,ptr is <0x%lx>.\n", iterator->_vpi_handle));
+        pyvpi_verbose("pyvpi.Handle->Handle is "
+                    "release,ptr is "FADDR_MARCO".\n", iterator->_vpi_handle);
         iterator->is_free = 1;
         Py_INCREF(Py_None);
         return Py_None;
@@ -356,8 +356,8 @@ pyvpi_RemoveCb(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
         return NULL;
     cbhandle->is_free = 1;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->Handle is "
-                    "release,ptr is <0x%lx>.\n", cbhandle->_vpi_handle));
+    pyvpi_verbose("pyvpi.Handle->Handle is "
+                    "release,ptr is "FADDR_MARCO".\n", cbhandle->_vpi_handle);
     Py_DECREF(cbdata);    /* Remove cbdata reference! */      
     return Py_BuildValue("i", ans);
 }
@@ -367,8 +367,8 @@ pyvpi_GetCbInfo(PyObject *self, PyObject *args)
 {
      //There is no use to port this function;
      //TBD
-    pyvpi_warning(sprintf(print_buffer,"pyvpi.getCbInfo is not allowed "
-                "used in this version!\n"));
+    pyvpi_warning("pyvpi.getCbInfo is not allowed "
+                "used in this version!\n");
     Py_INCREF(Py_None);
     return Py_None;
 //# p_pyvpi_handle  object,trgobj;
@@ -418,8 +418,8 @@ static PyObject*
 pyvpi_GetSysTfInfo(PyObject *self, PyObject *args)
 {
     //There is no use to port this function;
-    pyvpi_warning(sprintf(print_buffer,"pyvpi.getSysTfInfo is not allowed "
-                 "used in this version!\n"));
+    pyvpi_warning("pyvpi.getSysTfInfo is not allowed "
+                 "used in this version!\n");
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -458,15 +458,15 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
         return NULL;
     }
     if(Py_TYPE(value) != &pyvpi_value_Type) {
-        pyvpi_debug(sprintf(print_buffer, "2nd arg of putValue is not pyvpi.Vaule, "
-                    "trade it as NULL"));
+        pyvpi_debug("2nd arg of putValue is not pyvpi.Vaule, "
+                    "trade it as NULL");
         value = NULL;
     }
     if(Py_TYPE(time) != &pyvpi_time_Type) {    
         //PyErr_SetString(VpiError,  "Error args, 3nd arg must be pyvpi.Time.");
         //return NULL;
-        pyvpi_debug(sprintf(print_buffer, "3nd arg of putValue is not pyvpi.Time, "
-                    "trade it as NULL"));
+        pyvpi_debug("3nd arg of putValue is not pyvpi.Time, "
+                    "trade it as NULL");
         time = NULL;
     }
     ans = vpi_put_value(handle->_vpi_handle,
@@ -802,74 +802,66 @@ static PyMethodDef pyvpi_Methods[] = {
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+/*
+  pyvpi log printf functions.
+ */
+#ifndef PYVPI_LOG_FUNC
+#define PYVPI_LOG_FUNC(pl,PL)\
+PLI_INT32 \
+    pyvpi_##pl(PLI_BYTE8 * format, ...)\
+{\
+    va_list va;\
+    PLI_INT32 retval = 0;\
+    if(print_level <= PRINT_##PL) {\
+        vpi_printf(#PL" : ");\
+        va_start(va, format);\
+        retval = vpi_vprintf(format, va);\
+        va_end(va);\
+    }\
+    return retval;\
+}
+#endif
+
+PYVPI_LOG_FUNC(verbose,VERBOSE)
+PYVPI_LOG_FUNC(debug,DEBUG)
+PYVPI_LOG_FUNC(trace,TRACE)
+PYVPI_LOG_FUNC(note,NOTE)
+PYVPI_LOG_FUNC(warning,WARNING)
+PYVPI_LOG_FUNC(error,ERROR)
+PYVPI_LOG_FUNC(fatal,FATAL)
+
+#ifndef PYVPI_TYPE_READY
+#define PYVPI_TYPE_READY(vpi_type,name) \
+    if (PyType_Ready(&vpi_type) < 0) \
+    {\
+    pyvpi_error(#vpi_type" is not Ready.\n"); \
+        return;\
+    }\
+    pyvpi_verbose(#vpi_type" is "FADDR_MARCO".\n",&vpi_type);\
+    Py_INCREF(&vpi_type);\
+    PyModule_AddObject(m, #name, (PyObject *)&vpi_type)    
+
+#endif
 
 //Module initial here
 PyMODINIT_FUNC initpyvpi(void)
 {
     PyObject *m;
-    //Check user type is ready..
-    if (PyType_Ready(&pyvpi_value_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_value_Type is not Ready.\n")); 
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_value_Type is <0x%lx>.\n",&pyvpi_value_Type));
-
-    if (PyType_Ready(&pyvpi_cbdata_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_cbdata_Type is not Ready.\n"));
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_cbdata_Type is <0x%lx>.\n",&pyvpi_cbdata_Type));
-
-    if (PyType_Ready(&pyvpi_time_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_time_Type is not Ready.\n"));
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_time_Type is <0x%lx>.\n",&pyvpi_time_Type));
-
-    if (PyType_Ready(&pyvpi_strengthval_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_strengthval_Type is not Ready.\n"));
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_strengthval_Type is <0x%lx>.\n",&pyvpi_strengthval_Type));
-    
-    if (PyType_Ready(&pyvpi_vector_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_vector_Type is not Ready.\n"));
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_vector_Type is <0x%lx>.\n",&pyvpi_vector_Type));
-    
-    if (PyType_Ready(&pyvpi_handle_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_handle_Type is not Ready.\n"));
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_handle_Type is <0x%lx>.\n",&pyvpi_handle_Type));
-
-    if (PyType_Ready(&pyvpi_delays_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_delays_Type is not Ready.\n"));
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_delays_Type is <0x%lx>.\n",&pyvpi_delays_Type));
-    
-    if (PyType_Ready(&pyvpi_systfdata_Type) < 0)
-    {
-        pyvpi_error(sprintf(print_buffer, "pyvpi_systfdata_Type is not Ready.\n"));
-        return;
-    }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi_systfdata_Type is <0x%lx>.\n",&pyvpi_systfdata_Type));
-
-
+ 
     //Initial the module.
     m = Py_InitModule("pyvpi", pyvpi_Methods);
     if (m == NULL)
         return;
-    
+
+    PYVPI_TYPE_READY(pyvpi_value_Type,Value);
+    PYVPI_TYPE_READY(pyvpi_cbdata_Type,CbData);
+    PYVPI_TYPE_READY(pyvpi_time_Type,Time);
+    PYVPI_TYPE_READY(pyvpi_strengthval_Type,Strength);
+    PYVPI_TYPE_READY(pyvpi_vector_Type,Vector);
+    PYVPI_TYPE_READY(pyvpi_delays_Type,Delays);
+    PYVPI_TYPE_READY(pyvpi_systfdata_Type,SysTfData);
+    PYVPI_TYPE_READY(pyvpi_handle_Type,Handle);
+
     //Add vpi Error in pyvpi module.
     VpiError = PyErr_NewException("pyvpi.vpiError", NULL, NULL);
     Py_INCREF(VpiError);
@@ -881,25 +873,7 @@ PyMODINIT_FUNC initpyvpi(void)
     PyModule_AddObject(m, "PyError", PyError);
     
     DumbTuple   =   PyTuple_New(0);
-    DumbDict    =   PyDict_New();    
-
-    //Add user type.
-    Py_INCREF(&pyvpi_value_Type);
-    PyModule_AddObject(m, "Value", (PyObject *)&pyvpi_value_Type);
-    Py_INCREF(&pyvpi_cbdata_Type);
-    PyModule_AddObject(m, "CbData", (PyObject *)&pyvpi_cbdata_Type);
-    Py_INCREF(&pyvpi_time_Type);
-    PyModule_AddObject(m, "Time", (PyObject *)&pyvpi_time_Type);
-    Py_INCREF(&pyvpi_strengthval_Type);
-    PyModule_AddObject(m, "Strength", (PyObject *)&pyvpi_strengthval_Type);
-    Py_INCREF(&pyvpi_vector_Type);
-    PyModule_AddObject(m, "Vector", (PyObject *)&pyvpi_vector_Type);
-    Py_INCREF(&pyvpi_handle_Type);
-    PyModule_AddObject(m, "Handle", (PyObject *)&pyvpi_handle_Type);
-    Py_INCREF(&pyvpi_delays_Type);
-    PyModule_AddObject(m, "Delays", (PyObject *)&pyvpi_delays_Type);    
-    Py_INCREF(&pyvpi_systfdata_Type);
-    PyModule_AddObject(m, "SysTfData", (PyObject *)&pyvpi_systfdata_Type);
+    DumbDict    =   PyDict_New();
 }
 
 //============================================================================
@@ -910,7 +884,7 @@ PLI_INT32 pyvpi_StartSim(p_cb_data cb_data_p)
 
     if(vpi_get_vlog_info(&info)){
         int i = 0;
-        char *p,*q;
+        char *p = pyvpi_start,*q='\0';
         for(i = 0; i<info.argc; i++) {
             q = info.argv[i];
             p = pyvpi_start;
@@ -930,9 +904,9 @@ PLI_INT32 pyvpi_StartSim(p_cb_data cb_data_p)
 
 PLI_INT32 pyvpi_EndSim(p_cb_data cb_data_p)
 {
-    pyvpi_debug(sprintf(print_buffer,"python begin env finalize.\n"));
+    pyvpi_debug("python begin env finalize.\n");
     Py_Finalize();
-    pyvpi_debug(sprintf(print_buffer,"python end env finalize.\n"));
+    pyvpi_debug("python end env finalize.\n");
     return 0;
 }
 /*****************************************************************************
@@ -990,13 +964,13 @@ pyvpi_main_check( PLI_BYTE8 *user_data )
                     vpi_get(vpiConstType,arg) == vpiStringConst){
                 }
                 else {
-                    pyvpi_fatal(sprintf(print_buffer,"The 1st of pyvpi_main must be a "
-                        "path string which indicate a py file.\n"));
+                    pyvpi_fatal("The 1st of pyvpi_main must be a "
+                        "path string which indicate a py file.\n");
                 }
                 break;
             default :
-                pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only accept one"
-                    " string arg.\n"));
+                pyvpi_fatal("In this version, pyvpi only accept one"
+                    " string arg.\n");
                 break;
             }
             index++;
@@ -1004,8 +978,8 @@ pyvpi_main_check( PLI_BYTE8 *user_data )
         }
     }
     if(index != 1) {
-        pyvpi_fatal(sprintf(print_buffer,"In this version, pyvpi only/must accept one"
-                    " string arg.\n"));
+        pyvpi_fatal("In this version, pyvpi only/must accept one"
+                    " string arg.\n");
     }
     return re;
 }
@@ -1033,10 +1007,10 @@ void pyvpi_RegisterTfs( void )
 
     //We must initial Python here so we can use python register 
     //System task and function.
-    pyvpi_debug(sprintf(print_buffer,"python begin env initial.\n"));
+    pyvpi_debug("python begin env initial.\n");
     Py_Initialize();
     PySys_SetArgv(1,argv);
-    pyvpi_debug(sprintf(print_buffer,"python end env initial.\n"));
+    pyvpi_debug("python end env initial.\n");
 
     {
         s_vpi_vlog_info info;

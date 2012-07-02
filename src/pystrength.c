@@ -46,8 +46,8 @@ PyTypeObject pyvpi_strengthval_Type = {
 void pyvpi_strengthval_Dealloc(p_pyvpi_strengthval self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Strengthval is release, "
-        "ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi._Strengthval is release, "
+        "ptr is "FADDR_MARCO".\n",self);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -59,14 +59,14 @@ int  pyvpi_strengthval_Init(s_pyvpi_strengthval *self, PyObject *args, PyObject 
                                       &self->_vpi_strengthval.s0,
                                       &self->_vpi_strengthval.s1))
         return -1;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Strengthval is Initial.\n"));
+    pyvpi_verbose("pyvpi._Strengthval is Initial.\n");
     return 0;
 }
 
 PyObject * pyvpi_strengthval_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     p_pyvpi_strengthval self = (p_pyvpi_strengthval)type->tp_alloc(type, 0);
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._Strengthval is allocate,ptr is <0x%lx>, "
-        "type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose("pyvpi._Strengthval is allocate,ptr is "FADDR_MARCO", "
+        "type ptr is "FADDR_MARCO".\n",self,type);
     return (PyObject *) self;
 }

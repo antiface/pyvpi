@@ -47,8 +47,8 @@ PyTypeObject pyvpi_value_Type = {
 void pyvpi_value_Dealloc(p_pyvpi_value self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is release, "
-        "ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi.Value is release, "
+        "ptr is "FADDR_MARCO".\n",self);
     if(self->obj != NULL) 
         Py_XDECREF(self->obj);
     if(self->fixed_handle !=NULL) 
@@ -72,8 +72,8 @@ int  pyvpi_value_Init(s_pyvpi_value *self, PyObject *args, PyObject *kwds)
         return -1;
     }
     Py_DECREF(self->obj);       //For inital, we need no object...
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is Initial, "
-                                      "format is <0x%lx>.\n",self->_vpi_value.format));
+    pyvpi_verbose("pyvpi.Value is Initial, "
+                                      "format is "FADDR_MARCO".\n",self->_vpi_value.format);
     return update_format(self,self->_vpi_value.format,NULL);
 }
 
@@ -88,8 +88,8 @@ PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     Py_INCREF(Py_None);
     self-> obj = Py_None;
     self->fixed_handle = NULL;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Value is allocate, "
-                                      "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose("pyvpi.Value is allocate, "
+                                      "ptr is "FADDR_MARCO", type ptr is "FADDR_MARCO".\n",self,type);
     return (PyObject *) self;
 }
 
@@ -165,7 +165,7 @@ void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32
     }
     else {
         if(self->_vpi_value.format != ovalp->format)
-            pyvpi_error(sprintf(print_buffer,"Found error when update fixed handle pyvpi.Value!"));
+            pyvpi_error("Found error when update fixed handle pyvpi.Value!");
     }
     switch (ovalp->format) {
     /* all string values */

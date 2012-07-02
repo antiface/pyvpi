@@ -57,7 +57,7 @@ pyvpi_cbdata_Dealloc(p_pyvpi_cbdata self)
     Py_DECREF(self->obj_h);
     Py_XDECREF(self->user_data);
     Py_XDECREF(self->dict);
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.CbData is release,ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi.CbData is release,ptr is "FADDR_MARCO".\n",self);
     self->ob_type->tp_free((PyObject*)self);
 }
 /*
@@ -154,7 +154,7 @@ pyvpi_cbdata_Init(p_pyvpi_cbdata self, PyObject *args, PyObject *kwds)
     }
     self->_vpi_cbdata.cb_rtn = _pyvpi_cb_rtn;  //All CbObject's callback is _pyvpi_cb_rtn.
     self->_vpi_cbdata.user_data = (PLI_BYTE8 *) self;   //The user_data always be self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.CbData is Initial.\n"));
+    pyvpi_verbose("pyvpi.CbData is Initial.\n");
     return 0;
 }
 
@@ -178,8 +178,8 @@ pyvpi_cbdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         PyErr_SetString(VpiError, "Can't allocate a pyvpi.CbData memory.");
         return NULL;
     }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.CbData is allocate,ptr is <0x%lx>, "
-        "type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose("pyvpi.CbData is allocate,ptr is "FADDR_MARCO", "
+        "type ptr is "FADDR_MARCO".\n",self,type);
     return (PyObject *) self;
 }
 
@@ -350,10 +350,10 @@ _pyvpi_cb_rtn(p_cb_data data)
     //In this function, we must convert data to s_pyvpi_cbdata;
     p_pyvpi_cbdata self = (s_pyvpi_cbdata *) data->user_data;
     p_pyvpi_value  pv   = (p_pyvpi_value) ((size_t)self->_vpi_cbdata.value - offsetof(s_pyvpi_value, _vpi_value));
-    pyvpi_verbose(sprintf(print_buffer,"_pyvpi_cb_rtn in.\n"));
+    pyvpi_verbose("_pyvpi_cb_rtn in.\n");
     //Return -1 if callback is not callback...
     if (!PyCallable_Check(self->callback)) {
-        pyvpi_error(sprintf(print_buffer,"callback is not callable!\n"));
+        pyvpi_error("callback is not callable!\n");
         return -1;
     }
     
@@ -378,6 +378,6 @@ _pyvpi_cb_rtn(p_cb_data data)
     arglist = Py_BuildValue("(O)",self);    
     (void) PyObject_CallObject(self->callback, arglist);
     Py_DECREF(arglist);
-    pyvpi_verbose(sprintf(print_buffer,"_pyvpi_cb_rtn out.\n"));
+    pyvpi_verbose("_pyvpi_cb_rtn out.\n");
     return 0;
 }

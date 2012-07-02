@@ -46,7 +46,7 @@ PyTypeObject pyvpi_vector_Type = {
 void pyvpi_vector_Dealloc(p_pyvpi_vector self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is release,ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi.Vector is release,ptr is "FADDR_MARCO".\n",self);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -58,7 +58,7 @@ int  pyvpi_vector_Init(s_pyvpi_vector *self, PyObject *args, PyObject *kwds)
     if (! PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist,                                      
                                       &self->size,&tmpval))
         return -1;    
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is Initial,size is <0x%lx>.\n",self->size));
+    pyvpi_verbose("pyvpi.Vector is Initial,size is "FADDR_MARCO".\n",self->size);
     /*1. update vector size.*/    
     if(pyvpi_vector_update_cache(self) != 0){
         return -1;
@@ -83,8 +83,8 @@ PyObject * pyvpi_vector_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
         Py_DECREF(self);
         return NULL;
     }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Vector is allocate,ptr is <0x%lx>, "
-        "type ptr is <0x%lx>.\n", self, type));
+    pyvpi_verbose("pyvpi.Vector is allocate,ptr is "FADDR_MARCO", "
+        "type ptr is "FADDR_MARCO".\n", self, type);
     return (PyObject *) self;
 }
 

@@ -17,8 +17,14 @@ typedef uint64_t         PLI_UINT64;
 
 #ifdef __LP64__
 #define PYVPI_ALIGN 8
+#ifndef FADDR_MARCO
+#define FADDR_MARCO "<0x%llx>"
+#endif
 #else
 #define PYVPI_ALIGN 4
+#ifndef FADDR_MARCO
+#define FADDR_MARCO "<0x%x>"
+#endif
 #endif
 
 extern PyTypeObject pyvpi_value_Type;
@@ -53,47 +59,12 @@ PyObject *DumbDict;
 static int  print_level     = PRINT_TRACE;
 static char print_buffer[2048];
 
-#define pyvpi_verbose(str)  \
-    if(print_level <= PRINT_VERBOSE) { \
-    str;\
-    vpi_printf("VERBOSE : %s",print_buffer); \
-    }
-
-#define pyvpi_debug(str)  \
-    if(print_level <= PRINT_DEBUG) { \
-    str;\
-    vpi_printf("DEBUG : %s",print_buffer); \
-    }
-
-#define pyvpi_trace(str)  \
-    if(print_level <= PRINT_TRACE) { \
-    str;\
-    vpi_printf("TRACE : %s",print_buffer); \
-    }
-
-#define pyvpi_note(str)  \
-    if(print_level <= PRINT_NOTE) { \
-    str;\
-    vpi_printf("NOTE : %s",print_buffer); \
-    }
-
-#define pyvpi_warning(str)  \
-    if(print_level <= PRINT_WARNING) { \
-    str;\
-    vpi_printf("WARNING : %s",print_buffer); \
-    }
-
-#define pyvpi_error(str)  \
-    if(print_level <= PRINT_ERROR) { \
-    str;\
-    vpi_printf("ERROR : %s",print_buffer); \
-    }
-
-#define pyvpi_fatal(str)  \
-    if(print_level <= PRINT_FATAL) { \
-    str;\
-    vpi_printf("FATAL : %s",print_buffer); \
-    vpi_control(vpiFinish); \
-    }
-
+//Utils functions
+PLI_INT32 pyvpi_verbose(PLI_BYTE8 * format, ...);
+PLI_INT32 pyvpi_debug(PLI_BYTE8 * format, ...);
+PLI_INT32 pyvpi_trace(PLI_BYTE8 * format, ...);
+PLI_INT32 pyvpi_note(PLI_BYTE8 * format, ...);
+PLI_INT32 pyvpi_warning(PLI_BYTE8 * format, ...);
+PLI_INT32 pyvpi_error(PLI_BYTE8 * format, ...);
+PLI_INT32 pyvpi_fatal(PLI_BYTE8 * format, ...);
 #endif

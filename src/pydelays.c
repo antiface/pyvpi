@@ -46,8 +46,8 @@ PyTypeObject pyvpi_delays_Type = {
 void pyvpi_delays_Dealloc(p_pyvpi_delays self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Delay is release, "
-        "ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi.Delay is release, "
+        "ptr is "FADDR_MARCO".\n",self);
     Py_DECREF(self->pdelays);
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -88,7 +88,7 @@ int  pyvpi_delays_Init(s_pyvpi_delays *self, PyObject *args, PyObject *kwds)
         self->pdelays       =   PyTuple_New(0);
         self->_vpi_delay.no_of_delays  =   0;
     }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Delay is Initial.\n"));
+    pyvpi_verbose("pyvpi.Delay is Initial.\n");
     return 0;
 }
 
@@ -96,8 +96,8 @@ PyObject * pyvpi_delays_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_delays self = (p_pyvpi_delays)type->tp_alloc(type, 0);
     self->_vpi_delay.da = NULL;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Delay is allocate,ptr is <0x%lx>, "
-        "type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose("pyvpi.Delay is allocate,ptr is "FADDR_MARCO", "
+        "type ptr is "FADDR_MARCO".\n",self,type);
     return (PyObject *) self;
 }
 

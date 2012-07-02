@@ -46,7 +46,7 @@ PyTypeObject pyvpi_time_Type = {
 void pyvpi_time_Dealloc(p_pyvpi_time self)
 {
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is release,ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi.Time is release,ptr is "FADDR_MARCO".\n",self);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -62,16 +62,16 @@ int  pyvpi_time_Init(s_pyvpi_time *self, PyObject *args, PyObject *kwds)
             "(type = int).");
         return -1;
     }
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is Initial,type is <0x%lx>.\n",
-        self->_vpi_time.type));
+    pyvpi_verbose("pyvpi.Time is Initial,type is "FADDR_MARCO".\n",
+        self->_vpi_time.type);
     return 0;
 }
 
 PyObject * pyvpi_time_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_time self = (p_pyvpi_time)type->tp_alloc(type, 0);
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Time is allocate, "
-                                      "ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose("pyvpi.Time is allocate, "
+                                      "ptr is "FADDR_MARCO", type ptr is "FADDR_MARCO".\n",self,type);
     return (PyObject *) self;
 }
 

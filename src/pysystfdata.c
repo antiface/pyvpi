@@ -68,8 +68,8 @@ void pyvpi_systfdata_Dealloc(p_pyvpi_systfdata self)
     Py_XDECREF(self->calltf);
     Py_XDECREF(self->compiletf);
     Py_XDECREF(self->sizetf);
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is release, "
-                                      "ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi._SysTfData is release, "
+                                      "ptr is "FADDR_MARCO".\n",self);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -141,16 +141,16 @@ int  pyvpi_systfdata_Init(s_pyvpi_systfdata *self, PyObject *args, PyObject *kwd
         if(s_pyvpi_systfdata_setsizetf(self,self->sizetf,NULL) == -1) 
             return -1;
     } 
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is Initial, "
-        "type is <0x%lx>.\n",self->_vpi_systfdata.type));
+    pyvpi_verbose("pyvpi._SysTfData is Initial, "
+        "type is "FADDR_MARCO".\n",self->_vpi_systfdata.type);
     return 0;
 }
 
 PyObject * pyvpi_systfdata_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {   
     p_pyvpi_systfdata self = (p_pyvpi_systfdata)type->tp_alloc(type, 0);
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi._SysTfData is allocate,ptr is <0x%lx>, "
-        "type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose("pyvpi._SysTfData is allocate,ptr is "FADDR_MARCO", "
+        "type ptr is "FADDR_MARCO".\n",self,type);
     return (PyObject *) self;
 }
 

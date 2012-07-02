@@ -52,7 +52,7 @@ void pyvpi_handle_Dealloc(p_pyvpi_handle self)
     PyObject * key;
     int        cnt;
     //Free self.
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is release,ptr is <0x%lx>.\n",self));
+    pyvpi_verbose("pyvpi.Handle is release,ptr is "FADDR_MARCO".\n",self);
     //Check this handle is exist or not;
     if(self->_vpi_handle != NULL){
 #ifdef __LP64__
@@ -72,8 +72,8 @@ void pyvpi_handle_Dealloc(p_pyvpi_handle self)
                 cnt = PyInt_AsLong(_tmp_h) - 1;            
                 if(cnt == 0) { 
                     PyDict_DelItem(_HandleDict,key);
-                    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle->_vpi_handle is release,ptr is <0x%lx>.\n",
-                    self->_vpi_handle));
+                    pyvpi_verbose("pyvpi.Handle->_vpi_handle is release,ptr is "FADDR_MARCO".\n",
+                    self->_vpi_handle);
                     vpi_free_object(self->_vpi_handle);
                 }
                 else {                
@@ -94,7 +94,7 @@ int  pyvpi_handle_Init(s_pyvpi_handle *self, PyObject *args, PyObject *kwds)
     
     PyErr_SetString(VpiError,  "Error, you can't new a Handle object.");
 #ifdef PYVPI_DEBUG
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is Initial.\n"));
+    pyvpi_verbose("pyvpi.Handle is Initial.\n");
 #endif
     Py_DECREF(self);
     return -1;
@@ -105,7 +105,7 @@ PyObject * pyvpi_handle_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
     p_pyvpi_handle self = (p_pyvpi_handle)type->tp_alloc(type, 0);
     self->_vpi_handle   = NULL;
     self->is_free       = 0;
-    pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,type));
+    pyvpi_verbose("pyvpi.Handle is allocate,ptr is "FADDR_MARCO", type ptr is "FADDR_MARCO".\n",self,type);
     return (PyObject *) self;
 }
 
@@ -123,7 +123,7 @@ PyObject *_pyvpi_handle_New(vpiHandle handle){
         self = (p_pyvpi_handle) pyvpi_handle_Type.tp_alloc(&pyvpi_handle_Type, 0);
         self->_vpi_handle = handle;
         self->is_free       = 0;
-        pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle is allocate,ptr is <0x%lx>, type ptr is <0x%lx>.\n",self,&pyvpi_handle_Type));
+        pyvpi_verbose("pyvpi.Handle is allocate,ptr is "FADDR_MARCO", type ptr is "FADDR_MARCO".\n",self,&pyvpi_handle_Type);
 #ifdef __LP64__        
         key = Py_BuildValue("k",handle);
 #else
@@ -135,7 +135,7 @@ PyObject *_pyvpi_handle_New(vpiHandle handle){
             cnt = PyInt_AsLong(_tmp_h) + 1;
         }
         else {
-            pyvpi_verbose(sprintf(print_buffer, "pyvpi.Handle._vpi_handle is allocate,ptr is <0x%lx>.\n",handle));
+            pyvpi_verbose("pyvpi.Handle._vpi_handle is allocate,ptr is "FADDR_MARCO".\n",handle);
         }
         _tmp_h = PyInt_FromLong(cnt);
         PyDict_SetItem(_HandleDict,key,_tmp_h);   //TBD when the key value is same, how to dealwith refer        
