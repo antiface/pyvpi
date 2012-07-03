@@ -2,9 +2,15 @@
 
 /*****************************************************************************
  * This is all code for python.
-/*****************************************************************************/
-//We Define two errors, if vpi call function is error, VpiError will be assert,
-//else if python error, PyError will be set.
+ *****************************************************************************/
+int  print_level     = PRINT_TRACE;
+
+PyObject *VpiError;
+PyObject *PyError;
+
+PyObject *DumbTuple;
+PyObject *DumbDict;
+
 /*****************************************************************************
  * pyvpi_CheckError()
  * Checks if an error was reported by the last vpi function called
@@ -921,7 +927,11 @@ void pyvpi_RegisterCallbacks (void)
     vpi_register_cb(&cb_end_sim);
 }
 
-//============================================================================
+/*****************************************************************************
+ * pyvpi_main
+ * The main function of pyvpi, you can use $pyvpi_main in verilog to call 
+ * special python scripts.
+ *****************************************************************************/
 PLI_INT32 
 pyvpi_main( PLI_BYTE8 *user_data )
 {
@@ -1014,10 +1024,9 @@ void pyvpi_RegisterTfs( void )
 
     {
         s_vpi_vlog_info info;
-
         if(vpi_get_vlog_info(&info)){   //First try to get vlog info.
             int i = 0;
-            char *p,*q;
+            char *p = pyvpi_load,*q;
             for(i = 0; i<info.argc; i++) {
                 q = info.argv[i];
                 p = pyvpi_load;
@@ -1027,14 +1036,14 @@ void pyvpi_RegisterTfs( void )
                 if(*p == '\0') break;
             }
             if(*p == '\0'){
-                //Pass load filename from args
+                /* Pass load filename from args */
                 PyObject* py_fp;
                 py_fp = PyFile_FromString(q, "r");
                 PyRun_SimpleFile(PyFile_AsFile(py_fp),q);
             }
         }
         else {
-            //Default pyvpi load file.
+            /* Default pyvpi load file. */
             if(access("pyvpi.load",0) == 0) {
                 PyObject* py_fp;
                 py_fp = PyFile_FromString("pyvpi.load", "r");
@@ -1053,5 +1062,3 @@ void (*vlog_startup_routines[])() = {
     pyvpi_RegisterCallbacks,
     0
 };
-
-/*****************************************************************************/

@@ -40,11 +40,20 @@ extern PyTypeObject pyvpi_systfdata_Type;
     Python other modules type;
  */
 
-//Extern pyobject.
-PyObject *VpiError;
-PyObject *PyError;
-PyObject *DumbTuple;
-PyObject *DumbDict;
+/* ------------------------------ Extern pyobjects ---------------------------- */
+
+/*****************************************************************************
+ * We Define two errors, if vpi call function is error, VpiError will be 
+ * assert, else if python error, PyError will be set.
+ *****************************************************************************/
+extern PyObject *VpiError;
+extern PyObject *PyError;
+
+/*****************************************************************************
+ * DumbTuple and DumbDict used for pyobject new in c code.
+ *****************************************************************************/
+extern PyObject *DumbTuple;
+extern PyObject *DumbDict;
 
 
 //Common use print macro.
@@ -56,8 +65,7 @@ PyObject *DumbDict;
 #define PRINT_ERROR     60
 #define PRINT_FATAL     70
 
-static int  print_level     = PRINT_TRACE;
-static char print_buffer[2048];
+extern int  print_level;
 
 //Utils functions
 PLI_INT32 pyvpi_verbose(PLI_BYTE8 * format, ...);
