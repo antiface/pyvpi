@@ -1,5 +1,19 @@
 #include "pyvector.h"
 
+static PyMethodDef  pyvpi_vector_methods[] = {
+    {NULL}
+};
+static PyMemberDef pyvpi_vector_members[]  = {    
+    {NULL}
+};
+static PyGetSetDef pyvpi_vector_getsets[]  = {
+    {"size", (getter)s_pyvpi_vector_getsize, 
+    (setter)s_pyvpi_vector_setsize,"get/set size.",NULL},
+    {"vec", (getter)s_pyvpi_vector_getvalue, 
+    (setter)s_pyvpi_vector_setvalue,"get/set value.",NULL},
+    {NULL}
+};
+
 PyTypeObject pyvpi_vector_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/

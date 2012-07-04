@@ -26,16 +26,5 @@ extern void pyvpi_strengthval_Dealloc(p_pyvpi_strengthval self);
 extern int  pyvpi_strengthval_Init(s_pyvpi_strengthval *self, PyObject *args, PyObject *kwds);
 extern PyObject * pyvpi_strengthval_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
-static PyMethodDef  pyvpi_strengthval_methods[] = {
-    {NULL}
-};
-static PyMemberDef pyvpi_strengthval_members[]  = {
-    {"logic",   T_INT,   offsetof(s_pyvpi_strengthval, _vpi_strengthval.logic), 0, "strength logic value."},
-    {"s0",      T_INT,   offsetof(s_pyvpi_strengthval, _vpi_strengthval.s0),    0, "strength s0"},
-    {"s1",      T_INT,   offsetof(s_pyvpi_strengthval, _vpi_strengthval.s1),    0, "strength s1"},
-    {NULL}
-};
-static PyGetSetDef pyvpi_strengthval_getsets[]  = {
-    {NULL}
-};
+
 #endif

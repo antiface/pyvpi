@@ -38,17 +38,5 @@ int        s_pyvpi_vector_setsize(s_pyvpi_vector *self, PyObject *value, void *c
 PyObject * s_pyvpi_vector_getvalue(s_pyvpi_vector *self, void *closure);
 int        s_pyvpi_vector_setvalue(s_pyvpi_vector *self, PyObject *value, void *closure);
 
-static PyMethodDef  pyvpi_vector_methods[] = {
-    {NULL}
-};
-static PyMemberDef pyvpi_vector_members[]  = {    
-    {NULL}
-};
-static PyGetSetDef pyvpi_vector_getsets[]  = {
-    {"size", (getter)s_pyvpi_vector_getsize, 
-    (setter)s_pyvpi_vector_setsize,"get/set size.",NULL},
-    {"vec", (getter)s_pyvpi_vector_getvalue, 
-    (setter)s_pyvpi_vector_setvalue,"get/set value.",NULL},
-    {NULL}
-};
+
 #endif

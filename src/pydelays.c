@@ -1,5 +1,22 @@
 #include "pydelays.h"
 
+static PyMethodDef  pyvpi_delays_methods[] = {
+    {NULL}
+};
+static PyMemberDef pyvpi_delays_members[]  = {
+//    {"no_of_delays",    T_INT,  offsetof(s_pyvpi_delays, _vpi_delay.no_of_delays),   0, "number of delays"},
+    {"time_type",       T_INT,  offsetof(s_pyvpi_delays, _vpi_delay.time_type),      0, "[vpiScaledRealTime, vpiSimTime,vpiSuppressTime]"},
+    {"mtm_flag",        T_INT,  offsetof(s_pyvpi_delays, _vpi_delay.mtm_flag),       0, "true for mtm values"},
+    {"append_flag",     T_INT,  offsetof(s_pyvpi_delays, _vpi_delay.append_flag),    0, "true for append"},
+    {"pulsere_flag",    T_INT,  offsetof(s_pyvpi_delays, _vpi_delay.pulsere_flag),   0, "true for pulsere values"},
+    {NULL}
+};
+static PyGetSetDef pyvpi_delays_getsets[]  = {
+    {"delays", (getter)s_pyvpi_delays_getdelays, 
+    (setter)s_pyvpi_delays_setdelays,"get/set delays.",NULL},
+    {NULL}
+};
+
 PyTypeObject pyvpi_delays_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/

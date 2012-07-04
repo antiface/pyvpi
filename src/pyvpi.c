@@ -149,7 +149,7 @@ pyvpi_Handle(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     if(ans == NULL) {
-        PyErr_Format(VpiError,  "There is not relation between %d and <%lx>.",
+        PyErr_Format(VpiError,  "There is not relation between %d and "FADDR_MARCO".",
             type, refHandle);
         return NULL;
     }
@@ -191,7 +191,7 @@ pyvpi_Iterate(PyObject *self, PyObject *args)
        return NULL;
 
     if(ans == NULL) {
-        PyErr_Format(VpiError,  "Can't get right iterator in handle: <%lx>.",
+        PyErr_Format(VpiError,  "Can't get right iterator in handle: "FADDR_MARCO".",
             refHandle);
         return NULL;
     }
@@ -416,8 +416,7 @@ pyvpi_RegisterSysTf(PyObject *self, PyObject *args)
     if(pyvpi_CheckError())
        return NULL;
     Py_INCREF(systfdata); //Always increment systfdata.
-    Py_INCREF(Py_None);
-    return (PyObject *)Py_None;
+    return _pyvpi_handle_New(ans);
 }
 
 static PyObject* 
@@ -965,8 +964,8 @@ pyvpi_main_check( PLI_BYTE8 *user_data )
     self = vpi_handle(vpiSysTfCall,NULL);
     arg_iter = vpi_iterate(vpiArgument,self);
     if(!(re = CheckError()) && arg_iter){
-        while(arg =vpi_scan(arg_iter)){
-            if(re = CheckError())
+        while((arg =vpi_scan(arg_iter))){
+            if((re = CheckError()))
                 break;
             switch(index){
             case 0 :
@@ -1026,7 +1025,7 @@ void pyvpi_RegisterTfs( void )
         s_vpi_vlog_info info;
         if(vpi_get_vlog_info(&info)){   //First try to get vlog info.
             int i = 0;
-            char *p = pyvpi_load,*q;
+            char *p = pyvpi_load,*q=pyvpi_load;
             for(i = 0; i<info.argc; i++) {
                 q = info.argv[i];
                 p = pyvpi_load;

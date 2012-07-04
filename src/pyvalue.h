@@ -49,24 +49,11 @@ extern PyObject * pyvpi_value_New(PyTypeObject *type, PyObject *args, PyObject *
 
 //misc
 extern void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32 blen);
-static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* nobj);
+extern PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* nobj);
 
 //Get/Set Functions ......
 //value
 PyObject * s_pyvpi_value_getvalue(s_pyvpi_value *self, void *closure);
 int        s_pyvpi_value_setvalue(s_pyvpi_value *self, PyObject *value, void *closure);
-
-static PyMethodDef  pyvpi_value_methods[] = {
-    {NULL}
-};
-static PyMemberDef pyvpi_value_members[]  = {
-    {"format",  T_UINT, offsetof(s_pyvpi_value, _vpi_value.format), READONLY, " format"},
-    {NULL}
-};
-static PyGetSetDef pyvpi_value_getsets[]  = {
-    {"value", (getter)s_pyvpi_value_getvalue, 
-    (setter)s_pyvpi_value_setvalue,"get/set value.",NULL},
-    {NULL}
-};
 
 #endif

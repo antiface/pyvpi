@@ -1,6 +1,19 @@
 //The 
 #include "pyvalue.h"
 
+static PyMethodDef  pyvpi_value_methods[] = {
+    {NULL}
+};
+static PyMemberDef pyvpi_value_members[]  = {
+    {"format",  T_UINT, offsetof(s_pyvpi_value, _vpi_value.format), READONLY, " format"},
+    {NULL}
+};
+static PyGetSetDef pyvpi_value_getsets[]  = {
+    {"value", (getter)s_pyvpi_value_getvalue, 
+    (setter)s_pyvpi_value_setvalue,"get/set value.",NULL},
+    {NULL}
+};
+
 //Type define here
 PyTypeObject pyvpi_value_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -290,7 +303,7 @@ void pyvip_value_update_value(s_pyvpi_value *self, s_vpi_value *ovalp, PLI_INT32
  * User can update format and object here, before call this function, all reference must
  * be care processed.
  */
-static PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* nobj)
+PLI_INT32 update_format(p_pyvpi_value self, PLI_INT32 nformat, PyObject* nobj)
 {
     p_pyvpi_vector pvector;
     p_pyvpi_time   ptime;

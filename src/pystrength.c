@@ -1,5 +1,18 @@
 #include "pystrength.h"
 
+static PyMethodDef  pyvpi_strengthval_methods[] = {
+    {NULL}
+};
+static PyMemberDef pyvpi_strengthval_members[]  = {
+    {"logic",   T_INT,   offsetof(s_pyvpi_strengthval, _vpi_strengthval.logic), 0, "strength logic value."},
+    {"s0",      T_INT,   offsetof(s_pyvpi_strengthval, _vpi_strengthval.s0),    0, "strength s0"},
+    {"s1",      T_INT,   offsetof(s_pyvpi_strengthval, _vpi_strengthval.s1),    0, "strength s1"},
+    {NULL}
+};
+static PyGetSetDef pyvpi_strengthval_getsets[]  = {
+    {NULL}
+};
+
 PyTypeObject pyvpi_strengthval_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/

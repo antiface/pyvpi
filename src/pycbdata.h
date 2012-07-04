@@ -65,27 +65,5 @@ int        s_pyvpi_cbdata_setcallback(s_pyvpi_cbdata *self, PyObject *value, voi
  */
 extern PLI_INT32 _pyvpi_cb_rtn(p_cb_data data);
 
-static PyMethodDef  pyvpi_cbdata_methods[] = {
-    {NULL}
-};
-static PyMemberDef pyvpi_cbdata_members[]  = {
-    {"cbhandle",  T_OBJECT, offsetof(s_pyvpi_cbdata, cb_h), READONLY, " handle after register"},
-    {"user_data",  T_OBJECT, offsetof(s_pyvpi_cbdata, user_data), 0,  " user data object"},
-    {NULL}
-};
-static PyGetSetDef pyvpi_cbdata_getsets[]  = {
-    {"reason", (getter)s_pyvpi_cbdata_getreason, 
-    (setter)s_pyvpi_cbdata_setreason,"get/set callback reason.",NULL},
-    {"trgobj", (getter)s_pyvpi_cbdata_gettrgobj, 
-    (setter)s_pyvpi_cbdata_settrgobj,"get/set trigger object.",NULL},
-    {"time", (getter)s_pyvpi_cbdata_gettime, 
-    (setter)s_pyvpi_cbdata_settime,"get/set trigger time.",NULL},
-    {"value", (getter)s_pyvpi_cbdata_getvalue, 
-    (setter)s_pyvpi_cbdata_setvalue,"get/set trigger value.",NULL},
-    {"index", (getter)s_pyvpi_cbdata_getindex, 
-    (setter)s_pyvpi_cbdata_setindex,"get/set index.",NULL},
-    {"callback", (getter)s_pyvpi_cbdata_getcallback, 
-    (setter)s_pyvpi_cbdata_setcallback,"get/set callback for trigger.",NULL},
-    {NULL}
-};
+
 #endif

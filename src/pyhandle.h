@@ -23,19 +23,6 @@ extern PyObject * pyvpi_handle_New(PyTypeObject *type, PyObject *args, PyObject 
 
 extern PyObject * _pyvpi_handle_New(vpiHandle handle);
 
-static PyMethodDef  pyvpi_handle_methods[] = {
-    {NULL}
-};
-static PyMemberDef pyvpi_handle_members[]  = {
-#ifdef __LP64__
-    {"_handle",  T_ULONG,   offsetof(s_pyvpi_handle, _vpi_handle), READONLY, "The real value for vpiHandle."},
-#else
-    {"_handle",  T_UINT,   offsetof(s_pyvpi_handle, _vpi_handle), READONLY, "The real value for vpiHandle."},
-#endif
-    {NULL}
-};
-static PyGetSetDef pyvpi_handle_getsets[]  = {
-    {NULL}
-};
+
 #endif
 

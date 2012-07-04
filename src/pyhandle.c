@@ -3,6 +3,23 @@
 // This variable used to check the handle double free...
 static  PyObject* _HandleDict = NULL;
 
+static PyMethodDef  pyvpi_handle_methods[] = {
+    {NULL}
+};
+
+static PyMemberDef pyvpi_handle_members[]  = {
+#ifdef __LP64__
+    {"_handle",  T_ULONG,   offsetof(s_pyvpi_handle, _vpi_handle), READONLY, "The real value for vpiHandle."},
+#else
+    {"_handle",  T_UINT,   offsetof(s_pyvpi_handle, _vpi_handle), READONLY, "The real value for vpiHandle."},
+#endif
+    {NULL}
+};
+
+static PyGetSetDef pyvpi_handle_getsets[]  = {
+    {NULL}
+};
+
 PyTypeObject pyvpi_handle_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/

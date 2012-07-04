@@ -53,44 +53,5 @@ int        s_pyvpi_systfdata_setcompiletf(s_pyvpi_systfdata *self, PyObject *val
 PyObject * s_pyvpi_systfdata_getsizetf(s_pyvpi_systfdata *self, void *closure);
 int        s_pyvpi_systfdata_setsizetf(s_pyvpi_systfdata *self, PyObject *value, void *closure);
 
-static PyMethodDef  pyvpi_systfdata_methods[] = {
-    {NULL}
-};
-static PyMemberDef pyvpi_systfdata_members[]  = {
-    {NULL}
-};
-static PyGetSetDef pyvpi_systfdata_getsets[]  = {
-    {   "type", 
-        (getter)s_pyvpi_systfdata_gettype,             
-        (setter)s_pyvpi_systfdata_settype,
-        "get/set function/task type.",
-        NULL},
-    {   "sysfunctype", 
-        (getter)s_pyvpi_systfdata_getsysfunctype, 
-        (setter)s_pyvpi_systfdata_setsysfunctype,
-        "get/set function/task return type.",
-        NULL},
-    {   "tfname", 
-        (getter)s_pyvpi_systfdata_gettfname, 
-        (setter)s_pyvpi_systfdata_settfname,
-        "get/set function/task name(start with $).",
-        NULL},
-    {   "calltf", 
-        (getter)s_pyvpi_systfdata_getcalltf, 
-        (setter)s_pyvpi_systfdata_setcalltf,
-        "get/set call function/task.",
-        NULL},
-    {   "compiletf", 
-        (getter)s_pyvpi_systfdata_getcompiletf, 
-        (setter)s_pyvpi_systfdata_setcompiletf,
-        "get/set  compile function/task.",
-        NULL},
-    {   "sizetf", 
-        (getter)s_pyvpi_systfdata_getsizetf, 
-        (setter)s_pyvpi_systfdata_setsizetf,
-        "get/set  compile function/task.",
-        NULL},
-    {NULL}
-};
 #endif
 

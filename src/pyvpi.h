@@ -22,8 +22,8 @@
 #include "pycbdata.h"
 #include "pysystfdata.h"
 
-static PyObject *SysTfDict;         //This is a dict used to store all system task and function in register.
-static PyObject *CallbackDict;      //This is a dict used to store all register callback function.
+//static PyObject *SysTfDict;         //This is a dict used to store all system task and function in register.
+//static PyObject *CallbackDict;      //This is a dict used to store all register callback function.
 /* ------------------------------------------------------------------------- */
 extern int pyvpi_CheckError( void );
 /* ------------------------------------------------------------------------- */
