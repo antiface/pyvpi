@@ -63,7 +63,6 @@ setup(name = '',
                                c_src,
                                include_dirs = inc_dirs,
                                library_dirs = lib_dirs,
-                               extra_compile_args = ["-Wunused"],
                                libraries = libs,
                                )]
       )
