@@ -1,6 +1,6 @@
 #! python
 import pyvpi
-import sv_vpi_user as cons
+import pyvpi_cons as cons
 import random
 import unittest
 import sys

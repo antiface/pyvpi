@@ -445,7 +445,7 @@ pyvpi_PutValue(PyObject *self, PyObject *args)
     p_pyvpi_handle  handle,oans; 
     p_pyvpi_value   value;
     p_pyvpi_time    time = (p_pyvpi_time) Py_None;
-    PLI_INT32       flags = vpiInertialDelay;
+    PLI_INT32       flags = vpiNoDelay;
     vpiHandle       ans;
     if (!PyArg_ParseTuple(args, "OO|Oi", &handle, &value, &time, flags))
     {
@@ -534,6 +534,20 @@ pyvpi_Control(PyObject *self, PyObject *args)
     return Py_BuildValue("i",vpi_control(op));    
 }
 
+static PyObject*
+pyvpi_SetDebugLevel(PyObject *self, PyObject *args)
+{
+    PLI_INT32 new_level = PRINT_NOTE;
+    if (!PyArg_ParseTuple(args, "k", &new_level))
+    {
+        PyErr_SetString(VpiError,  "Error args, must be (int).");
+        return NULL;
+    }
+	print_level = new_level;
+	Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyMethodDef pyvpi_Methods[] = {
    /* for obtaining handles */
    {"handleByName",    pyvpi_HandleByName,     METH_VARARGS,   "vpiHandle  vpi_handle_by_name (PLI_BYTE8 *name, vpiHandle scope)."},
@@ -557,6 +571,7 @@ static PyMethodDef pyvpi_Methods[] = {
    {"getSysTfInfo",    pyvpi_GetSysTfInfo,     METH_VARARGS,   "void       vpi_get_systf_info  (vpiHandle object, <out>p_systf_data systf_data_p)."},
    {"printf",		   pyvpi_Print,			   METH_VARARGS,   "print function for vpi_printf"},
    {"control",		   pyvpi_Control,		   METH_VARARGS,   "contorl"},
+   {"setDebugLevel",   pyvpi_SetDebugLevel,	   METH_VARARGS,   "set pyvpi debug print level."},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

@@ -142,24 +142,24 @@ endmodule
 module test;
     reg clk;
     reg [7:0] a,b;
-    reg  [8:0] o;
-    reg  [7:0]  mem [0:16];
-    reg  [7:0]  mem1 [0:16][0:7];
+    wire  [8:0] o;
     
-    always @(*) begin
-        o = a + b;
-    end
+//    always @(*) begin
+//        o = a + b;
+//    end
+    assign o = a + b;
     
     always #5 clk = ~clk;
     
     initial begin
-        $pyvpi_main("test.py");
         clk = 0;
         a   = 0;
         b   = 0;
         repeat(10) begin
         #5;
-        a = a +1;        
+        a = a +1;
+        $display("a: 0x%x, b: 0x%x, o: 0x%x",a,b,o);
+        $pyvpi_main("2.py");
         end
         $finish(0);
     end

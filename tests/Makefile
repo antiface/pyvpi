@@ -1,4 +1,4 @@
-export PYTHONPATH += .:../src/pyvpi
+export PYTHONPATH += .:./..
 
 ifeq ($(OS),Windows_NT)
     DES_TARGET    := pyvpi.pyd
@@ -50,4 +50,4 @@ vpi : $(SRC_C)
 	$(SRC_O)
 
 run :
-	vsim -c -do vsim.do test -pli $(DES_TARGET)    
+	vsim -c -do vsim.do test -pli $(DES_TARGET) -l vsim.log
